@@ -1,7 +1,7 @@
 // M4 UI: 사건 말풍선·카드, 건물 카드, 개성 분신 카드, 숨은 장면 카드, 도감·앨범 섹션
 import Phaser from 'phaser';
 import { G } from '../game';
-import { city, cityJobs, incomeNow, jobIncomeBase, feverMult, nextTeam, owned, job, eco } from '../core/econ';
+import { city, cityJobs, incomeNow, jobIncomeBase, feverMult, nextTeam, owned, job, eco, albumCount, albumMult } from '../core/econ';
 import { resolveEvent, seriesProgress } from '../core/director';
 import { placeUnique, renameUnique, hintLevel, discoverScene } from '../core/uniques';
 import { hire } from '../core/actions';
@@ -85,6 +85,20 @@ export function sceneCard(ctx: UiCtx, sceneId: string, done: () => void) {
 export function clonesExtra(ctx: UiCtx) {
   return (c: Phaser.GameObjects.Container, y0: number): number => {
     const s = G.s; const sc = ctx.sc; let y = y0;
+    // 📸 단체 사진첩(작게): 직종 × 팀 보너스 단계 칸, 모은 칸은 금색. 1장당 전체 수입 +1%
+    const n = albumCount(s);
+    c.add(txt(sc, 12, y, `📸 단체 사진첩 ${n}장 · 수집 보너스 +${Math.round((albumMult(s) - 1) * 100)}% (최대 +${Math.round(eco('album_bonus_cap') * 100)}%)`, 12, C.gold, { fontStyle: 'bold' }));
+    c.add(button(sc, W - 40, y + 7, 60, 16, '앨범 보기', () => ctx.queue.push((d) => albumCard(ctx, 0, d), 'album'), 0x3a86ff, 9));
+    y += 18;
+    for (const j of cityJobs(s)) {
+      c.add(txt(sc, 16, y, j.name, 9, C.dim));
+      D.team.forEach((_m, i) => {
+        const got = s.teamPhotos[`${j.id}:${i + 1}`] !== undefined;
+        c.add(sc.add.rectangle(140 + i * 18, y + 6, 14, 10, got ? TIER_COLOR[j.tier] : 0x2a2d3e).setStrokeStyle(1, got ? 0xffd166 : 0x4a4f6a));
+      });
+      y += 13;
+    }
+    y += 8;
     c.add(txt(sc, 12, y, `개성 분신 도감 ${s.uniques.length}/${UNIQUES.length} (${city(s).name})`, 14, C.gold, { fontStyle: 'bold' })); y += 22;
     for (const d of UNIQUES) {
       const u = s.uniques.find((x) => x.id === d.id);
@@ -104,8 +118,7 @@ export function clonesExtra(ctx: UiCtx) {
     if (s.cityHistory.length) {
       c.add(txt(sc, 12, y, `떠난 마을: ${s.cityHistory.map((h) => `${G_cityName(h.cityIdx)}(분신 ${formatKR(h.clones)}·명성 +${h.fame})`).join(', ')}`, 11, C.dim, { wordWrap: { width: W - 24 } })); y += 34;
     }
-    c.add(button(sc, W / 2, y + 16, 200, 30, `📷 추억 앨범 (${album().length}/30)`, () => ctx.queue.push((d) => albumCard(ctx, 0, d), 'album'), 0x3a86ff, 12));
-    return y + 40;
+    return y + 10;
   };
 }
 import { D } from '../core/econ';

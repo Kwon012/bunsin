@@ -7,7 +7,7 @@ import { stampToday, mvpLine, absentNews, PARADE_MIN_SEC, PARADE_MIN_INCOME_SEC,
 import { formatKR, formatSec } from '../core/format';
 import { clock } from '../core/clock';
 import { lineText } from '../data/content';
-import { showCard } from './popup';
+import { showCard, showLedger } from './popup';
 import { type UiCtx } from './flows';
 import { button, txt, W, H, R, C } from './kit';
 import { sfx, sound } from '../fx/sound';
@@ -38,31 +38,28 @@ export function paradeFlow(ctx: UiCtx, done: () => void) {
 export function settlementFlow(ctx: UiCtx, done: () => void) {
   const s = G.s; const rep = s.pendingOffline;
   if (!rep) { done(); return; }
-  const lines: string[] = [`비운 시간 ${formatSec(rep.sec)}${rep.capped ? ' · 8시간 이후는 25% 속도로 계속 쌓임' : ''}`];
-  for (const [id, v] of Object.entries(rep.byJob)) if (v > 0) lines.push(`${job(id).name} 야간 근무  +${formatKR(v)}`);
-  if (s.envelopes > 0) lines.push(`밀린 월급봉투 ${rep.paydays}장  +${formatKR(s.envelopes)}`);
-  if (rep.dividendCash + rep.heldDividend > 0) lines.push(`배당금(현금)  +${formatKR(rep.dividendCash + rep.heldDividend)}`);
-  if (rep.dividendReinvest > 0) lines.push(`통장에서 불어난 돈  +${formatKR(rep.dividendReinvest)}`);
   const total = rep.income + s.envelopes + rep.dividendCash + rep.heldDividend;
-  lines.push(`합계  +${formatKR(total)}`);
-  const mvp = mvpLine(s, rep); if (mvp) lines.push(`🏅 ${mvp}`);
-  const news = absentNews(s); if (news.length) lines.push('— 부재중 마을 뉴스 —', ...news.map((n) => `· ${n}`));
+  // 중요한 정보(큰 글씨 3줄) → 신문(부재중 뉴스) → 덜 중요한 정보(작은 글씨)
+  const rows = [
+    { label: '분신 야간 근무', amount: rep.income },
+    { label: `밀린 월급봉투 ${rep.paydays}장`, amount: s.envelopes },
+    { label: '배당금', amount: rep.dividendCash + rep.heldDividend },
+  ];
+  const top3 = Object.entries(rep.byJob).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([id, v]) => `${job(id).name} ${formatKR(v)}`).join(' · ');
+  const foot = [top3 ? `직종별: ${top3}` : '', mvpLine(s, rep) ? `🏅 ${mvpLine(s, rep)}` : '', rep.dividendReinvest > 0 ? `통장에서 불어난 돈 +${formatKR(rep.dividendReinvest)}` : '',
+    rep.capped ? '8시간이 넘어 이후는 25% 속도로 쌓였어요' : ''].filter(Boolean);
   const collect = (double: boolean) => {
     G.act(() => collectOffline(G.s, rep, double));
     sfx.ding();
     ctx.toast(`정산 완료 +${formatKR(total + (double ? rep.income : 0))}`, C.gold);
   };
-  showCard(ctx.sc, { title: '🧾 정산서', lines, doodle: true, width: 330, buttons: [
-    { label: '받기', color: 0x06a77d, cb: () => { collect(false); done(); } },
+  showLedger(ctx.sc, { title: '🧾 정산서', total, sub: `비운 시간 ${formatSec(rep.sec)}`, rows, news: absentNews(s), foot, buttons: [
+    { label: '받기', color: 0x06a77d, cb: () => collect(false) },
     { label: '광고 보고 2배', color: 0x8338ec, cb: () => {
       const t = txt(ctx.sc, W / 2, H / 2, '광고 시청 중… (PoC 가짜 1초)', 14, '#fff', { backgroundColor: '#000', padding: { x: 10, y: 8 } }).setOrigin(0.5).setDepth(1500);
-      ctx.sc.time.delayedCall(1000, () => { t.destroy(); collect(true); done(); });
+      ctx.sc.time.delayedCall(1000, () => { t.destroy(); collect(true); });
     } },
-    { label: '공유', color: 0x3a86ff, cb: () => {
-      takePhoto(ctx.sc.game, `영수증: ${formatSec(rep.sec)} 동안 +${formatKR(total)}`, (p) => void sharePhoto(p, '분신 키우기 정산서'));
-      collect(false); done();
-    } },
-  ] }, () => {});
+  ] }, formatKR, () => ctx.sc.time.delayedCall(rep ? 0 : 0, done));
 }
 
 /** 출근 도장: 하루 첫 1탭. 7일째 기념 분신 */

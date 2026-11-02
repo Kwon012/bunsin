@@ -1,41 +1,44 @@
-// 홈(본체) 화면: 본체·거울·창문·분신 무리. 탭/꾹 누르기 입력, 뿅·피버 연출.
+// 홈(본체) 화면: 본체·거울·창문·가구·분신. 배경 어디든 탭 = 본체가 일함(꾹 누르기 = 느린 자동 탭).
+// 분신은 거울에서 튀어나와 바닥에 떨어진 뒤 걸어간다. 홈에는 최대 home_clone_cap명만 있고 나머지는 문으로 마을과 출퇴근한다.
 import Phaser from 'phaser';
 import { G } from '../game';
 import { tap } from '../core/actions';
-import { city, cityJobs, isUnlocked, job, owned, totalClones } from '../core/econ';
+import { city, cityJobs, eco, isUnlocked, job, owned, totalClones } from '../core/econ';
+import { currentHouse, houseFurniture, furnLevel } from '../core/home';
 import { A } from '../core/assumptions';
 import { formatKR } from '../core/format';
 import { lineText } from '../data/content';
 import { sfx } from '../fx/sound';
-import { setupCam, txt, W, R, C } from '../ui/kit';
+import { setupCam, txt, W, R, C, TIER_COLOR } from '../ui/kit';
 import type { GameEvent } from '../core/state';
 import type { Tier } from '../data/economy';
 import { eventBubble } from '../ui/m4';
 import { directTapFaster } from '../ui/m5';
 
-const CAP = 150; // 홈 표시 상한
 const BODY = { x: 180, y: 300 };
 const MIRROR = { x: 300, y: 150 };
-const STAGES: { tier: Tier | 'basement'; name: string; color: number }[] = [
-  { tier: 'basement', name: '반지하', color: 0x2b2a35 },
-  { tier: 'alba', name: '편의점 카운터', color: 0x24384a },
-  { tier: 'job', name: '사무실 책상', color: 0x29403a },
-  { tier: 'biz', name: '사장실', color: 0x4a3d24 },
-  { tier: 'inv', name: '펜트하우스', color: 0x3d2a4a },
+const DOOR = { x: 18, y: 470 };
+const FLOOR = { top: 360, bottom: 515 };
+const WALK_SPEED = 55; // px/s
+const STAGES: { name: string; color: number }[] = [
+  { name: '반지하', color: 0x2b2a35 }, { name: '편의점 카운터', color: 0x24384a }, { name: '사무실 책상', color: 0x29403a },
+  { name: '사장실', color: 0x4a3d24 }, { name: '펜트하우스', color: 0x3d2a4a },
 ];
+
+interface Walker { img: Phaser.GameObjects.Image; busy: boolean }
 
 export class HomeScene extends Phaser.Scene {
   private room!: Phaser.GameObjects.Rectangle;
   private stageText!: Phaser.GameObjects.Text;
   private face!: Phaser.GameObjects.Image;
-  private torso!: Phaser.GameObjects.Rectangle;
   private bodyBox!: Phaser.GameObjects.Container;
-  private clones: Phaser.GameObjects.Image[] = [];
-  private overflow!: Phaser.GameObjects.Text;
+  private walkers: Walker[] = [];
+  private countText!: Phaser.GameObjects.Text;
   private feverTint!: Phaser.GameObjects.Rectangle;
   private mirrorGlass!: Phaser.GameObjects.Rectangle;
   private windowGfx!: Phaser.GameObjects.Graphics;
   private windowLabel!: Phaser.GameObjects.Text;
+  private furnLayer?: Phaser.GameObjects.Container;
   private holdTimer?: Phaser.Time.TimerEvent;
   private holdStart?: Phaser.Time.TimerEvent;
   private faceReset?: Phaser.Time.TimerEvent;
@@ -46,45 +49,54 @@ export class HomeScene extends Phaser.Scene {
   private uniqueLayer?: Phaser.GameObjects.Container;
   private manager?: Phaser.GameObjects.Container;
   private fasterText!: Phaser.GameObjects.Text;
+  private combo = 0;
+  private lastTapAt = 0;
+  private commuteT = 0;
+  private wanderT = 0;
 
   constructor() { super('Home'); }
+
+  get homeCap() { return eco('home_clone_cap'); }
 
   create() {
     setupCam(this);
     this.room = this.add.rectangle(W / 2, 330, W, 580, STAGES[0].color);
-    this.add.rectangle(W / 2, 470, W, 130, 0x000000, 0.18); // 바닥
-    this.stageText = txt(this, 12, 218, '', 11, C.dim);
-    // 창문 너머: 그 도시 꼭대기 건물 실루엣(잠긴 구역 미리보기)
+    this.add.rectangle(W / 2, 455, W, 150, 0x000000, 0.18); // 바닥
+    // 문(출퇴근)
+    this.add.rectangle(DOOR.x, DOOR.y - 28, 30, 60, 0x6b4f35).setStrokeStyle(2, 0x3b2a20);
+    this.add.circle(DOOR.x + 9, DOOR.y - 26, 2.5, 0xffd166);
+    this.stageText = txt(this, 12, 196, '', 10, C.dim);
     this.windowGfx = this.add.graphics();
     this.windowLabel = txt(this, 75, 182, '', 9, '#cfd3ea', { align: 'center', wordWrap: { width: 150 } }).setOrigin(0.5, 0);
     this.drawWindow();
-    // 거울
     this.add.rectangle(MIRROR.x, MIRROR.y, 72, 118, 0x8d6e4a).setStrokeStyle(3, 0x5c4630);
     this.mirrorGlass = this.add.rectangle(MIRROR.x, MIRROR.y, 60, 104, 0xbfe6ff, 0.9);
     txt(this, MIRROR.x, MIRROR.y + 66, '거울', 10, C.dim).setOrigin(0.5, 0);
-    // 분신 무리
-    this.overflow = txt(this, W - 12, 520, '', 12, C.gold, { fontStyle: 'bold' }).setOrigin(1, 1).setDepth(50);
+    this.countText = txt(this, W - 10, 520, '', 11, C.gold, { fontStyle: 'bold' }).setOrigin(1, 1).setDepth(50);
     // 본체
-    this.torso = this.add.rectangle(0, 52, 70, 56, 0xff8fab).setStrokeStyle(2, 0x3b2a20);
+    const torso = this.add.rectangle(0, 52, 70, 56, 0xff8fab).setStrokeStyle(2, 0x3b2a20);
     this.face = this.add.image(0, 0, 'face_default').setScale(1 / R);
-    this.bodyBox = this.add.container(BODY.x, BODY.y, [this.torso, this.face]).setDepth(40);
-    const hit = this.add.zone(BODY.x, BODY.y + 20, 130, 150).setInteractive({ useHandCursor: true }).setDepth(41);
+    this.bodyBox = this.add.container(BODY.x, BODY.y, [torso, this.face]).setDepth(40);
+    // 배경 전체 탭(버튼·시트·말풍선은 UI가 먼저 받는다)
+    const hit = this.add.zone(W / 2, 300, W, 460).setInteractive().setDepth(1);
     hit.on('pointerdown', (p: Phaser.Input.Pointer) => this.onTap(p));
     hit.on('pointerup', () => this.stopHold());
     hit.on('pointerout', () => this.stopHold());
-    this.feverTint = this.add.rectangle(W / 2, H2, W, 640, 0xff006e, 0).setDepth(5);
-    this.rebuildClones();
+    this.feverTint = this.add.rectangle(W / 2, 320, W, 640, 0xff006e, 0).setDepth(5);
+    this.drawFurniture();
+    this.fillHome();
     this.refreshStage();
-    // 이벤트
     this.on2('hire', (e) => e.t === 'hire' && this.onHire(e.jobId, e.n));
     this.on2('unlock', () => this.refreshStage());
     this.on2('fever_start', () => this.feverStart());
     this.on2('fever_end', () => this.feverEnd());
     this.on2('payday', () => this.cheer());
-    this.on2('crown', () => this.time.delayedCall(800, () => { const c = this.clones[this.clones.length - 1]; if (c) this.crowns.push(this.add.image(c.x, c.y - 14, 'crown').setScale(1 / R).setDepth(c.depth + 1)); }));
-    this.on2('move', () => { this.rebuildClones(); this.refreshStage(); this.drawWindow(); this.drawUniques(); });
+    this.on2('crown', () => this.time.delayedCall(1300, () => { const w = this.walkers[this.walkers.length - 1]; if (w) this.add.image(0, 0, 'crown').setScale(1 / R).setData('follow', w.img).setDepth(60); }));
+    this.on2('move', () => { this.clearWalkers(); this.fillHome(); this.refreshStage(); this.drawWindow(); this.drawUniques(); this.drawFurniture(); });
     this.on2('tap', (e) => { if (e.t === 'tap' && e.auto) this.tapFx(BODY.x + Phaser.Math.Between(-30, 30), BODY.y - 40, e.amount, true); });
     this.on2('unique', () => this.drawUniques());
+    this.on2('furniture', () => { this.drawFurniture(); sfx.pop(); });
+    this.on2('house', () => { this.drawFurniture(); this.refreshStage(); this.cheer(); });
     G.bus.on('event_bubble', () => { this.bubble?.destroy(); this.bubble = eventBubble(this, 100, 250, () => this.onBubbleTap?.()); }, this);
     G.bus.on('event_bubble_end', () => { this.bubble?.destroy(); this.bubble = undefined; }, this);
     this.drawUniques();
@@ -100,24 +112,36 @@ export class HomeScene extends Phaser.Scene {
     const g = this.windowGfx; g.clear();
     g.fillStyle(0x87ceeb, 1).fillRect(20, 86, 110, 92);
     g.fillStyle(0x6b8f5e, 1).fillTriangle(20, 178, 75, 120, 130, 178);
-    // 꼭대기 건물 실루엣(흐리게)
     g.fillStyle(0x223344, 0.45).fillRect(64, 98, 22, 42).fillTriangle(60, 100, 75, 88, 90, 100);
     g.lineStyle(4, 0x8d6e4a, 1).strokeRect(20, 86, 110, 92).lineBetween(75, 86, 75, 178).lineBetween(20, 132, 130, 132);
     this.windowLabel.setText(`잠긴 구역: ${city(G.s).topBuilding}`);
   }
 
-  /** 매니저 분신(클립보드) + 본체 커피 */
+  /** 집 가구(레벨이 오를수록 진해지고 별이 붙는다) */
+  drawFurniture() {
+    this.furnLayer?.destroy();
+    this.furnLayer = this.add.container(0, 0).setDepth(8);
+    const fs = houseFurniture(currentHouse(G.s).id);
+    const xs = [48, 112, 248, 312];
+    fs.forEach((f, i) => {
+      const lv = furnLevel(G.s, f.id);
+      const x = xs[i % xs.length], y = 250;
+      const w = 34 + lv * 6, h = 22 + lv * 4;
+      const box = this.add.rectangle(x, y + 30 - h / 2, w, h, lv ? 0xc8a27a : 0x000000, lv ? 0.35 + lv * 0.2 : 0.15).setStrokeStyle(1, 0xffffff, lv ? 0.6 : 0.25);
+      const label = txt(this, x, y + 34, `${f.name}${lv ? ' ' + '★'.repeat(lv) : ''}`, 8, lv ? '#ffe8b0' : '#777').setOrigin(0.5, 0);
+      this.furnLayer!.add([box, label]);
+    });
+  }
+
   drawManager() {
     this.manager?.destroy();
     if (!G.s.managerUnlocked) return;
-    const m = this.add.image(0, 0, 'clone_job').setScale(1.8 / R);
-    const clip = txt(this, 14, -6, '📋', 12).setOrigin(0.5);
+    const m = this.add.image(26, 10, 'clone_job').setScale(1.8 / R);
+    const clip = txt(this, 40, 4, '📋', 12).setOrigin(0.5);
     const coffee = txt(this, BODY.x + 42 - (W / 2 + 60), 0, '☕', 16).setOrigin(0.5);
     this.manager = this.add.container(W / 2 + 60, BODY.y + 30, [m, clip, coffee]).setDepth(46);
-    m.setPosition(26, 10); clip.setPosition(40, 4);
   }
 
-  /** 개성 분신은 홈에서도 본체 곁에 보인다(이사 후 새 도시 첫 화면부터) */
   drawUniques() {
     this.uniqueLayer?.destroy();
     this.uniqueLayer = this.add.container(0, 0).setDepth(45);
@@ -140,74 +164,104 @@ export class HomeScene extends Phaser.Scene {
     let i = 0;
     if (top) i = top.tier === 'alba' ? (top.slot >= 2 ? 1 : 0) : top.tier === 'job' ? 2 : top.tier === 'biz' ? 3 : 4;
     this.room.setFillStyle(STAGES[i].color);
-    this.stageText.setText(`본체의 자리: ${STAGES[i].name} · ${city(s).name}`);
+    this.stageText.setText(`🏠 ${currentHouse(s).name} · 본체의 자리: ${STAGES[i].name} · ${city(s).name}`);
   }
 
+  // ---------- 분신(걷기·출퇴근) ----------
   private floorPos(): { x: number; y: number } {
     for (let k = 0; k < 20; k++) {
-      const x = Phaser.Math.Between(14, W - 14), y = Phaser.Math.Between(345, 520);
-      if (Math.abs(x - BODY.x) < 50 && y < 400) continue;
+      const x = Phaser.Math.Between(40, W - 16), y = Phaser.Math.Between(FLOOR.top, FLOOR.bottom);
+      if (Math.abs(x - BODY.x) < 46 && y < 400) continue;
       return { x, y };
     }
-    return { x: Phaser.Math.Between(14, 100), y: 500 };
+    return { x: 100, y: 500 };
   }
-
-  private addClone(tier: Tier, animate: boolean, delay = 0) {
+  /** 보유 직종 중 인원 비율로 무작위 등급 */
+  private randomTier(): Tier {
+    const s = G.s; const total = totalClones(s);
+    let r = Math.random() * Math.max(1, total);
+    for (const j of cityJobs(s)) { r -= owned(s, j.id); if (r <= 0) return j.tier; }
+    return 'alba';
+  }
+  private spawn(tier: Tier, x: number, y: number): Walker {
+    const img = this.add.image(x, y, `clone_${tier}`).setScale(1 / R).setDepth(10 + y / 100);
+    const w = { img, busy: false };
+    this.walkers.push(w);
+    return w;
+  }
+  /** 걸어서 이동(거리 비례 시간 + 뒤뚱거림) */
+  private walkTo(w: Walker, x: number, y: number, done?: () => void) {
+    w.busy = true;
+    const dist = Phaser.Math.Distance.Between(w.img.x, w.img.y, x, y);
+    const dur = Math.max(250, (dist / WALK_SPEED) * 1000);
+    w.img.setFlipX(x < w.img.x);
+    const wob = this.tweens.add({ targets: w.img, angle: { from: -7, to: 7 }, duration: 160, yoyo: true, repeat: -1 });
+    this.tweens.add({ targets: w.img, x, y, duration: dur, ease: 'Linear',
+      onUpdate: () => w.img.setDepth(10 + w.img.y / 100),
+      onComplete: () => { wob.stop(); w.img.setAngle(0); w.busy = false; done?.(); } });
+  }
+  private leave(w: Walker) {
+    this.walkTo(w, DOOR.x, DOOR.y, () => {
+      this.tweens.add({ targets: w.img, alpha: 0, duration: 200, onComplete: () => w.img.destroy() });
+      this.walkers = this.walkers.filter((x) => x !== w);
+    });
+  }
+  private arrive(tier: Tier) {
+    const w = this.spawn(tier, DOOR.x, DOOR.y);
+    w.img.setAlpha(0);
+    this.tweens.add({ targets: w.img, alpha: 1, duration: 200 });
     const p = this.floorPos();
-    const img = this.add.image(animate ? MIRROR.x : p.x, animate ? MIRROR.y : p.y, `clone_${tier}`).setScale(1 / R).setDepth(10 + p.y / 100);
-    this.clones.push(img);
-    if (animate) {
-      img.setScale(0);
-      this.tweens.add({ targets: img, scale: 1.4 / R, duration: 160, delay, ease: 'Back.easeOut',
-        onComplete: () => {
-          this.tweens.add({ targets: img, x: p.x, duration: 420, ease: 'Sine.easeInOut' });
-          this.tweens.add({ targets: img, y: { from: img.y, to: p.y }, duration: 420, ease: 'Back.easeIn' });
-          this.tweens.add({ targets: img, scale: 1 / R, duration: 420 });
-        } });
-    }
-    return img;
+    this.walkTo(w, p.x, p.y);
   }
-
-  private crowns: Phaser.GameObjects.Image[] = [];
-  rebuildClones() {
-    for (const c of this.crowns) c.destroy();
-    this.crowns = [];
-    for (const c of this.clones) c.destroy();
-    this.clones = [];
-    const s = G.s;
-    const total = totalClones(s);
-    const show = Math.min(total, CAP);
-    for (const j of cityJobs(s)) {
-      const n = Math.round((owned(s, j.id) / Math.max(1, total)) * show);
-      for (let i = 0; i < n && this.clones.length < CAP; i++) this.addClone(j.tier, false);
-    }
-    this.updateOverflow();
+  private clearWalkers() { this.walkers.forEach((w) => w.img.destroy()); this.walkers = []; }
+  /** 처음 열 때: 홈 정원만큼 배치 */
+  fillHome() {
+    const n = Math.min(this.homeCap, totalClones(G.s));
+    for (let i = 0; i < n; i++) { const p = this.floorPos(); this.spawn(this.randomTier(), p.x, p.y); }
+    this.updateCount();
   }
-  private updateOverflow() {
+  private updateCount() {
     const total = totalClones(G.s);
-    this.overflow.setText(total > this.clones.length ? `+${formatKR(total - this.clones.length)}명` : '');
+    this.countText.setText(total > this.walkers.length ? `홈 ${this.walkers.length}명 · 마을 ${formatKR(total - this.walkers.length)}명` : '');
   }
 
+  /** 고용: 거울 반짝 → 튀어나옴 → 바닥에 착지(먼지) → 걸어서 자리로(홈이 가득이면 문으로 출근) */
   private onHire(jobId: string, n: number) {
     const tier = job(jobId).tier;
     sfx.pop();
-    const room = Math.max(0, CAP - this.clones.length);
-    const k = Math.min(n, room, 10);
-    // ×10은 기존 분신 동시 점프 + 새 분신 동시 뿅
-    if (n >= 10) this.clones.slice(-30).forEach((c) => { if (!this.tweens.isTweening(c)) this.tweens.add({ targets: c, y: c.y - 18, duration: 160, yoyo: true }); });
-    for (let i = 0; i < k; i++) this.addClone(tier, true, n >= 10 ? 0 : i * 40);
-    this.updateOverflow();
-    // 거울 컷 변주
-    const colors = [0xbfe6ff, 0xffe0f0, 0xe0ffe0, 0xfff3c4];
     this.mirrorGlass.setFillStyle(0xffffff, 1);
-    this.time.delayedCall(90, () => this.mirrorGlass.setFillStyle(colors[G.s.totalHired % colors.length], 0.9));
-    // 첫 5분 대사(10~36초 같은 고용 구간 변주)
+    this.time.delayedCall(110, () => this.mirrorGlass.setFillStyle(0xbfe6ff, 0.9));
+    if (n >= 10) this.walkers.forEach((w) => { if (!w.busy) this.tweens.add({ targets: w.img, y: w.img.y - 16, duration: 150, yoyo: true }); });
+    const k = Math.min(n, 10);
+    for (let i = 0; i < k; i++) this.time.delayedCall(n >= 10 ? i * 50 : i * 120, () => this.popOne(tier));
     const line = G.s.sessions <= 1 ? lineText('first5', String(G.s.totalHired)) : undefined;
-    if (line) {
-      const c = this.clones[this.clones.length - 1];
-      this.say(c ? c.x : MIRROR.x, (c ? c.y : MIRROR.y) - 20, line, 2600);
-      if (G.s.totalHired === 5) this.clones.forEach((c2, i) => this.tweens.add({ targets: c2, angle: { from: -15, to: 15 }, duration: 120, yoyo: true, repeat: 2, delay: i * 30 }));
-    }
+    if (line) this.time.delayedCall(900, () => { const w = this.walkers[this.walkers.length - 1]; this.say(w ? w.img.x : MIRROR.x, (w ? w.img.y : MIRROR.y) - 20, line, 2600); });
+  }
+  private popOne(tier: Tier) {
+    const w = this.spawn(tier, MIRROR.x, MIRROR.y);
+    w.busy = true;
+    w.img.setScale(0).setDepth(70);
+    const landX = MIRROR.x - Phaser.Math.Between(20, 70), landY = FLOOR.top + Phaser.Math.Between(0, 20);
+    this.tweens.add({ targets: w.img, scale: 1.5 / R, duration: 140, ease: 'Back.easeOut', onComplete: () => {
+      // 포물선 낙하: x는 일정, y는 위로 살짝 → 아래로 가속
+      this.tweens.add({ targets: w.img, x: landX, duration: 420, ease: 'Linear' });
+      this.tweens.add({ targets: w.img, y: MIRROR.y - 24, duration: 150, ease: 'Quad.easeOut', onComplete: () => {
+        this.tweens.add({ targets: w.img, y: landY, duration: 270, ease: 'Quad.easeIn', onComplete: () => {
+          // 착지: 찌그러짐 + 먼지
+          this.tweens.add({ targets: w.img, scaleY: 0.7 / R, scaleX: 1.25 / R, duration: 70, yoyo: true, onComplete: () => w.img.setScale(1 / R) });
+          for (const dx of [-8, 8]) {
+            const d = this.add.circle(landX + dx, landY + 9, 3, 0xdddddd, 0.7).setDepth(69);
+            this.tweens.add({ targets: d, x: d.x + dx, scale: 2, alpha: 0, duration: 350, onComplete: () => d.destroy() });
+          }
+          this.time.delayedCall(160, () => {
+            w.busy = false;
+            if (this.walkers.length > this.homeCap) this.leave(w); // 홈이 가득 → 마을로 출근
+            else { const p = this.floorPos(); this.walkTo(w, p.x, p.y); }
+            this.updateCount();
+          });
+        } });
+      } });
+    } });
   }
 
   say(x: number, y: number, text: string, ms = 2000) {
@@ -218,8 +272,11 @@ export class HomeScene extends Phaser.Scene {
     this.time.delayedCall(ms, () => this.tweens.add({ targets: t, alpha: 0, duration: 200, onComplete: () => t.destroy() }));
   }
 
+  // ---------- 탭 ----------
   private onTap(p: Phaser.Input.Pointer) {
     const now = performance.now();
+    this.combo = now - this.lastTapAt < 600 ? this.combo + 1 : 1;
+    this.lastTapAt = now;
     this.playerTapTimes.push(now);
     while (this.playerTapTimes.length && now - this.playerTapTimes[0] > A.X_tapRateWindowSec * 1000) this.playerTapTimes.shift();
     const v = G.act((o) => tap(G.s, o));
@@ -228,48 +285,54 @@ export class HomeScene extends Phaser.Scene {
     this.holdStart = this.time.delayedCall(400, () => {
       this.holdTimer = this.time.addEvent({ delay: 1000 / A.X_holdTapsPerSec, loop: true, callback: () => {
         const v2 = G.act((o) => tap(G.s, o, true));
-        this.tapFx(BODY.x + Phaser.Math.Between(-20, 20), BODY.y - 30, v2, true);
+        this.tapFx(p.worldX + Phaser.Math.Between(-12, 12), p.worldY - 10, v2, true);
       } });
     });
-    this.bus('first_tap');
+    G.bus.emit('first_tap');
   }
-  private bus(k: string) { G.bus.emit(k); }
   private stopHold() { this.holdStart?.remove(); this.holdTimer?.remove(); this.holdStart = undefined; this.holdTimer = undefined; }
 
+  /** 탭 손맛: 충격 링 + 숫자(콤보가 오를수록 크게) + 본체 찌그러짐 + 동전이 상단 금액으로 + 소리 음높이 상승 + 약한 진동. 10콤보마다 큰 연출 */
   tapFx(x: number, y: number, v: number, auto: boolean) {
-    if (!auto) sfx.tap();
     this.face.setTexture(G.s.feverLeft > 0 ? 'face_cheer' : 'face_work');
     this.faceReset?.remove();
-    this.faceReset = this.time.delayedCall(260, () => this.face.setTexture(G.s.feverLeft > 0 ? 'face_cheer' : 'face_default'));
-    this.tweens.add({ targets: this.bodyBox, scaleY: 0.9, scaleX: 1.06, duration: 50, yoyo: true });
-    const t = txt(this, x, y - 10, `+${formatKR(v)}`, auto ? 11 : 14, C.gold, { fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(200);
-    this.tweens.add({ targets: t, y: y - 60, alpha: 0, duration: 700, onComplete: () => t.destroy() });
-    if (!auto) {
-      const coin = this.add.image(BODY.x, BODY.y - 10, 'coin').setScale(1 / R).setDepth(60);
-      this.tweens.add({ targets: coin, x: coin.x + Phaser.Math.Between(-70, 70), y: coin.y - Phaser.Math.Between(30, 70), duration: 250, ease: 'Quad.easeOut',
-        onComplete: () => this.tweens.add({ targets: coin, y: coin.y + 80, alpha: 0, duration: 300, onComplete: () => coin.destroy() }) });
+    this.faceReset = this.time.delayedCall(240, () => this.face.setTexture(G.s.feverLeft > 0 ? 'face_cheer' : 'face_default'));
+    this.tweens.killTweensOf(this.bodyBox);
+    this.bodyBox.setScale(1);
+    this.tweens.add({ targets: this.bodyBox, scaleY: 0.9, scaleX: 1.07, duration: 45, yoyo: true });
+    const size = auto ? 11 : 13 + Math.min(7, Math.floor(this.combo / 5));
+    const t = txt(this, x + Phaser.Math.Between(-8, 8), y - 12, `+${formatKR(v)}`, size, C.gold, { fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(200);
+    this.tweens.add({ targets: t, y: t.y - 46, alpha: 0, duration: 650, ease: 'Cubic.easeOut', onComplete: () => t.destroy() });
+    if (auto) return;
+    sfx.tap(1 + Math.min(0.5, this.combo * 0.02));
+    try { if (G.s.settings.sound) navigator.vibrate?.(6); } catch { /* 미지원 */ }
+    const ring = this.add.circle(x, y, 9).setStrokeStyle(3, 0xffd166).setDepth(199);
+    this.tweens.add({ targets: ring, scale: 2.4, alpha: 0, duration: 220, ease: 'Cubic.easeOut', onComplete: () => ring.destroy() });
+    G.bus.emit('coin', x, y);
+    if (this.combo % 10 === 0) {
+      const big = this.add.circle(x, y, 16).setStrokeStyle(4, 0xff9f1c).setDepth(199);
+      this.tweens.add({ targets: big, scale: 3.2, alpha: 0, duration: 380, onComplete: () => big.destroy() });
+      const ct = txt(this, x, y - 40, `${this.combo} 콤보!`, 16, '#ff9f1c', { fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(201);
+      this.tweens.add({ targets: ct, y: ct.y - 24, alpha: 0, scale: 1.3, duration: 700, onComplete: () => ct.destroy() });
+      try { if (G.s.settings.sound) navigator.vibrate?.(15); } catch { /* 미지원 */ }
     }
   }
 
   private feverStart() {
     sfx.fever();
+    this.cameras.main.shake(90, 0.003);
     this.face.setTexture('face_cheer');
     this.say(BODY.x, BODY.y - 60, '📣 다 같이 힘내자!', 1500);
-    this.clones.forEach((c, i) => { c.setData('baseY', c.y); this.tweens.add({ targets: c, y: c.y - 8, duration: 180, yoyo: true, repeat: -1, delay: (i % 10) * 30 }); });
+    this.walkers.forEach((w, i) => { if (!w.busy) this.tweens.add({ targets: w.img, y: w.img.y - 8, duration: 180, yoyo: true, repeat: 40, delay: (i % 10) * 30 }); });
   }
-  private feverEnd() {
-    this.tweens.killTweensOf(this.clones);
-    this.clones.forEach((c) => { const y = c.getData('baseY'); if (typeof y === 'number') c.y = y; });
-    this.face.setTexture('face_default');
-    this.feverTint.setAlpha(0);
-  }
+  private feverEnd() { this.face.setTexture('face_default'); this.feverTint.setAlpha(0); }
   cheer() {
     this.face.setTexture('face_cheer');
     this.time.delayedCall(1500, () => this.face.setTexture(G.s.feverLeft > 0 ? 'face_cheer' : 'face_default'));
-    this.clones.forEach((c, i) => this.tweens.add({ targets: c, y: c.y - 14, duration: 200, yoyo: true, repeat: 2, delay: (i % 12) * 25 }));
+    this.walkers.forEach((w, i) => { if (!w.busy) this.tweens.add({ targets: w.img, y: w.img.y - 14, duration: 200, yoyo: true, repeat: 2, delay: (i % 12) * 25 }); });
   }
 
-  update() {
+  update(_t: number, delta: number) {
     const s = G.s;
     if (s.managerUnlocked) {
       const now = performance.now();
@@ -278,12 +341,34 @@ export class HomeScene extends Phaser.Scene {
       if (f) this.fasterText.setText('직접 탭 = 더 빠름!');
       this.fasterText.setVisible(f);
     }
-    // 피버 3단계 색 변화(충전 중 게이지 단계 / 피버 중 맥동)
     if (s.feverLeft > 0) this.feverTint.setFillStyle(0xff006e, 0.12 + 0.08 * Math.sin(this.time.now / 120));
     else {
       const stage = s.feverGauge >= 2 / 3 ? 0.09 : s.feverGauge >= 1 / 3 ? 0.05 : 0;
       this.feverTint.setFillStyle(s.feverGauge >= 2 / 3 ? 0xff9f1c : 0xffd166, stage);
     }
+    // 왕관 따라다니기
+    this.children.list.forEach((o) => { const f = o.getData?.('follow') as Phaser.GameObjects.Image | undefined; if (f) { if (!f.active) o.destroy(); else (o as Phaser.GameObjects.Image).setPosition(f.x, f.y - 14); } });
+    // 어슬렁거리기(조금씩 다른 타이밍)
+    this.wanderT += delta;
+    if (this.wanderT > 1200) {
+      this.wanderT = 0;
+      const idle = this.walkers.filter((w) => !w.busy);
+      const w = idle[Math.floor(Math.random() * idle.length)];
+      if (w) { const p = this.floorPos(); const nx = Phaser.Math.Clamp(w.img.x + (p.x - w.img.x) * 0.3, 40, W - 16); const ny = Phaser.Math.Clamp(w.img.y + (p.y - w.img.y) * 0.3, FLOOR.top, FLOOR.bottom); this.walkTo(w, nx, ny); }
+    }
+    // 출퇴근: 분신이 홈 정원보다 많으면 몇 초마다 1명 퇴근 → 다른 직종 분신이 출근
+    this.commuteT += delta;
+    const total = totalClones(s);
+    if (this.commuteT > 3500) {
+      this.commuteT = 0;
+      if (this.walkers.length < Math.min(this.homeCap, total)) this.arrive(this.randomTier());
+      else if (total > this.homeCap) {
+        const idle = this.walkers.filter((w) => !w.busy);
+        const w = idle[Math.floor(Math.random() * idle.length)];
+        if (w) { this.leave(w); this.time.delayedCall(1500, () => this.arrive(this.randomTier())); }
+      }
+      this.updateCount();
+    }
   }
 }
-const H2 = 320;
+export { TIER_COLOR };

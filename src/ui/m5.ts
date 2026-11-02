@@ -3,7 +3,7 @@ import Phaser from 'phaser';
 import { G } from '../game';
 import { city, D, job } from '../core/econ';
 import { accountCap, deposit, withdraw, sellHeld } from '../core/account';
-import { hire, buyCert } from '../core/actions';
+import { executePurchase } from '../core/purchase';
 import { wallInfo, accountTotal, topJob } from '../core/recommend';
 import { moveCity, movePreview } from '../core/move';
 import { formatKR } from '../core/format';
@@ -46,7 +46,7 @@ export function breakAndBuy(ctx: UiCtx) {
   piggyBreakFx(ctx.sc, got);
   ctx.sc.time.delayedCall(2000, () => {
     const r = w.rec!;
-    G.act((o) => (r.kind === 'hire' ? hire(G.s, r.jobId, 1, o) : buyCert(G.s, r.jobId, o)));
+    G.act((o) => executePurchase(G.s, r, o));
   });
 }
 

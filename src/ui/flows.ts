@@ -1,11 +1,11 @@
 // 연출 시퀀스(대기열 아이템): 도입, 마을 공개, 월급날, 팀 보너스 단체 사진, 자격증, 출세 컷
 import Phaser from 'phaser';
 import { G } from '../game';
-import { job, D } from '../core/econ';
+import { job, D, teamCounts } from '../core/econ';
 import { formatKR, formatSec } from '../core/format';
 import { collectOffline } from '../core/offline';
 import { lineText, linesOf, pickLine } from '../data/content';
-import { showCard } from './popup';
+import { showCard, showLedger } from './popup';
 import { txt, W, H, C, R, doodleRect } from './kit';
 import { sfx } from '../fx/sound';
 import { takePhoto, photoTexture, sharePhoto, type Photo } from '../fx/photo';
@@ -80,33 +80,34 @@ export function paydayFlow(ctx: UiCtx, slip: PaydaySlip, done: () => void) {
     sc.tweens.add({ targets: e, y: H + 30, x: e.x + Phaser.Math.Between(-60, 60), angle: e.angle + Phaser.Math.Between(-180, 180),
       duration: Phaser.Math.Between(900, 1600), delay: i * 35, onComplete: () => e.destroy() });
   }
-  const big = txt(sc, W / 2, H / 2 - 40, '0', 40, C.gold, { fontStyle: 'bold', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(945);
-  const lbl = txt(sc, W / 2, H / 2 - 82, slip.index === 1 ? '🎉 첫 월급날!' : '💰 월급날!', 22, '#fff', { fontStyle: 'bold', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5).setDepth(945);
+  const big = txt(sc, W / 2, 214, '0', 30, C.gold, { fontStyle: 'bold', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(945);
+  const lbl = txt(sc, W / 2, 180, slip.index === 1 ? '🎉 첫 월급날!' : '💰 월급날!', 22, '#fff', { fontStyle: 'bold', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5).setDepth(945);
   sc.tweens.addCounter({ from: 0, to: slip.total, duration: 1300, ease: 'Cubic.easeOut',
     onUpdate: (tw) => big.setText(`+${formatKR(tw.getValue() ?? 0)}`),
     onComplete: () => sc.time.delayedCall(500, () => {
       big.destroy(); lbl.destroy();
-      const lines = slip.lines.map((l) => `${l.label}  +${formatKR(l.amount)}`);
-      if (slip.dividendCash + slip.dividendReinvest > 0) lines.push(`배당금  +${formatKR(slip.dividendCash + slip.dividendReinvest)}${slip.dividendReinvest > 0 ? ' (통장에 불어남)' : ''}`);
-      if (slip.heldDividend > 0) lines.push(`보유 종목 배당  +${formatKR(slip.heldDividend)}`);
-      const recent: string[] = [];
-      for (let k = 0; k < 2; k++) lines.push(`(공제) ${pickLine('deduction', recent)} 0원`);
-      lines.push('※ 공제는 분신들이 대신 냈습니다');
-      lines.push(`합계  +${formatKR(slip.total)}`);
-      if (slip.accountOpened) lines.push(`🐷 배당주 통장 개설! 축하금 ${formatKR(slip.openBonus)} 입금`);
-      showCard(sc, { title: `월급 명세서 #${slip.index}`, lines, doodle: true, buttons: [{ label: '받기', color: 0x06a77d }], width: 320 }, done);
+      // 명세서: 큰 합계 → 한 줄 한 정보(큰 금액 위) → 개그 공제 1줄은 맨 아래 작게
+      const rows = slip.lines.map((l) => ({ label: l.label, amount: l.amount }));
+      if (slip.dividendCash + slip.dividendReinvest > 0) rows.push({ label: slip.dividendReinvest > 0 ? '배당금(통장에서 불어남)' : '배당금', amount: slip.dividendCash + slip.dividendReinvest });
+      if (slip.heldDividend > 0) rows.push({ label: '보유 종목 배당', amount: slip.heldDividend });
+      const foot = [`(공제) ${pickLine('deduction', [])} 0원 — 분신들이 대신 냄`];
+      if (slip.accountOpened) foot.unshift(`🐷 배당주 통장 개설! 축하금 ${formatKR(slip.openBonus)} 입금`);
+      showLedger(sc, { title: `월급 명세서 #${slip.index}`, total: slip.total, totalNote: chickenNote(slip.total), rows, foot,
+        buttons: [{ label: '받기', color: 0x06a77d }] }, formatKR, done);
     }) });
 }
 
 export function teamFlow(ctx: UiCtx, jobId: string, count: number, done: () => void) {
   const j = job(jobId);
   sfx.ding();
-  photoCard(ctx, `${j.name} ${count}명 단체 사진! 팀 보너스 수입 ×2`, count === 25 ? `team_${j.slot}` : null, done);
+  const first = teamCounts(j)[0] === count;
+  photoCard(ctx, `${j.name} ${count}명 단체 사진! 그 직종 수입 +20% · 사진첩 +1%`, first ? `team_${j.slot}` : null, done);
 }
 
 export function certFlow(ctx: UiCtx, jobId: string, level: number, done: () => void) {
   const j = job(jobId);
-  showCard(ctx.sc, { title: `${j.name} 자격증 ${level}단계`, lines: [pickLine('cert', G.s.director.lastLines), '그 직종 수입 ×3'], doodle: true, autoCloseMs: 2200 }, done);
+  const m = D.cert[level - 1];
+  showCard(ctx.sc, { title: `🎓 ${j.name} ${m?.label ?? '자격증'}`, lines: [pickLine('cert', G.s.director.lastLines), `그 직종 수입 ×${m?.multiplier ?? 1}`, lineText('cert_fact') ?? ''].filter(Boolean), doodle: true, autoCloseMs: 3200 }, done);
 }
 
 /** 출세 만화 컷 + 비포·애프터 + 엄마 문자 */
@@ -157,4 +158,25 @@ export function settlementFlow(ctx: UiCtx, done: () => void) {
       ctx.sc.time.delayedCall(1000, () => { t.destroy(); collect(true); done(); });
     } },
   ] }, () => {});
+}
+
+/** 직종별 첫 분신 컷씬(2.5초, 탭으로 넘김): 같은 얼굴 분신이 크게 + 현실 경제 한 줄 */
+export function firstJobFlow(ctx: UiCtx, jobId: string, done: () => void) {
+  const j = job(jobId);
+  const lines = [lineText('firstjob', jobId) ?? lineText('firstjob', j.tier) ?? `${j.name} 첫 출근!`];
+  // 출세 컷(본체의 자리 비포·애프터 + 엄마 문자)은 그 등급의 첫 직종일 때만
+  const prev = D.jobs.find((x) => x.city === j.city && x.slot === j.slot - 1);
+  const firstOfTier = (j.tier === 'alba' && j.slot === 2) || (j.tier !== 'alba' && prev?.tier !== j.tier);
+  if (firstOfTier) {
+    const promo = lineText('promo', j.tier); if (promo) lines.push(`본체의 자리: ${promo}`);
+    const mom = lineText('mom', j.tier); if (mom) lines.push(mom);
+  }
+  sfx.pop();
+  showCard(ctx.sc, { title: `🎬 ${j.name} 첫 출근`, doodle: true, image: { key: `clone_${j.tier}`, w: 48, h: 66 }, lines, autoCloseMs: firstOfTier ? 3600 : 2600, width: 310 }, done);
+}
+
+/** 현실 물가 환산 한 줄(치킨 1마리 2만 원 가정) */
+export function chickenNote(amount: number): string {
+  const n = Math.floor(amount / 20000);
+  return n >= 1 ? `= 치킨 ${formatKR(n)}마리 🍗` : '';
 }

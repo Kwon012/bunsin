@@ -64,3 +64,61 @@ export function showCard(scene: Phaser.Scene, o: CardOpts, done: () => void) {
   if (o.autoCloseMs) scene.time.delayedCall(o.autoCloseMs, () => close());
   return { close };
 }
+
+export interface LedgerOpts {
+  title: string; total: number; totalNote?: string; sub?: string;
+  rows: { label: string; amount: number }[];
+  news?: string[]; foot?: string[];
+  buttons: { label: string; cb?: () => void; color?: number }[];
+}
+/** 명세서·정산서: 맨 위 큰 합계 → 한 줄 한 정보(큰 금액 위) → 작은 신문 상자 → 작은 글씨. 낙서풍 테두리 유지 */
+export function showLedger(scene: Phaser.Scene, o: LedgerOpts, fmt: (n: number) => string, done: () => void) {
+  const w = 320, ink = '#222222', dim = '#777777';
+  const rows = [...o.rows].filter((r) => r.amount > 0).sort((a, b) => b.amount - a.amount);
+  const parts: Phaser.GameObjects.GameObject[] = [];
+  const title = txt(scene, W / 2, 0, o.title, 15, ink, { fontStyle: 'bold' }).setOrigin(0.5, 0);
+  const total = txt(scene, W / 2, 0, `+${fmt(o.total)}원`, 28, '#b5651d', { fontStyle: 'bold' }).setOrigin(0.5, 0);
+  const note = o.totalNote ? txt(scene, W / 2, 0, o.totalNote, 11, dim).setOrigin(0.5, 0) : null;
+  const sub = o.sub ? txt(scene, W / 2, 0, o.sub, 11, dim).setOrigin(0.5, 0) : null;
+  const rowObjs = rows.map((r) => [txt(scene, W / 2 - w / 2 + 24, 0, r.label, 13, ink), txt(scene, W / 2 + w / 2 - 24, 0, `+${fmt(r.amount)}`, 13, ink, { fontStyle: 'bold' }).setOrigin(1, 0)] as const);
+  const newsObjs = (o.news ?? []).slice(0, 3).map((n) => txt(scene, W / 2 - w / 2 + 34, 0, `· ${n}`, 10, '#333', { wordWrap: { width: w - 70 } }));
+  const footObjs = (o.foot ?? []).map((f) => txt(scene, W / 2, 0, f, 10, dim, { align: 'center', wordWrap: { width: w - 40 } }).setOrigin(0.5, 0));
+  const newsH = newsObjs.length ? 24 + newsObjs.reduce((a, t) => a + t.height + 2, 0) + 8 : 0;
+  const h = 18 + title.height + 6 + total.height + (note ? note.height : 0) + (sub ? sub.height + 4 : 0) + 10 + rows.length * 22 + (newsH ? newsH + 8 : 0)
+    + footObjs.reduce((a, t) => a + t.height + 2, 0) + 58;
+  const { root, top } = cardBase(scene, w, Math.min(610, h), true);
+  let y = top + 16;
+  title.setY(y); y += title.height + 6;
+  total.setY(y); y += total.height;
+  if (note) { note.setY(y); y += note.height; }
+  if (sub) { sub.setY(y + 2); y += sub.height + 4; }
+  const g = scene.add.graphics();
+  g.lineStyle(1, 0x999999, 0.6).lineBetween(W / 2 - w / 2 + 20, y + 4, W / 2 + w / 2 - 20, y + 4);
+  y += 10;
+  for (const [l, r] of rowObjs) { l.setY(y); r.setY(y); y += 22; }
+  parts.push(g, title, total, ...(note ? [note] : []), ...(sub ? [sub] : []), ...rowObjs.flat());
+  if (newsObjs.length) {
+    // 작은 신문: 회색 종이 + 제호
+    y += 6;
+    const paper = scene.add.rectangle(W / 2, y + newsH / 2, w - 40, newsH, 0xeeeae0).setStrokeStyle(1, 0x999999);
+    const head = txt(scene, W / 2, y + 4, '📰 동네 신문 · 부재중 소식', 10, '#333', { fontStyle: 'bold' }).setOrigin(0.5, 0);
+    parts.push(paper, head);
+    let ny = y + 22;
+    for (const t of newsObjs) { t.setY(ny); ny += t.height + 2; parts.push(t); }
+    y += newsH + 6;
+  }
+  for (const f of footObjs) { f.setY(y); y += f.height + 2; parts.push(f); }
+  root.add(parts);
+  root.setScale(0.85).setAlpha(0);
+  scene.tweens.add({ targets: root, scale: 1, alpha: 1, duration: 160, ease: 'Back.easeOut' });
+  let closed = false;
+  const bw = Math.min(130, (w - 30) / o.buttons.length - 8);
+  const hh = Math.min(610, h);
+  o.buttons.forEach((b, i) => {
+    const bx = W / 2 + (i - (o.buttons.length - 1) / 2) * (bw + 10);
+    root.add(button(scene, bx, top + hh - 28, bw, 34, b.label, () => {
+      if (closed) return; closed = true;
+      scene.tweens.add({ targets: root, alpha: 0, duration: 120, onComplete: () => { root.destroy(); b.cb?.(); done(); } });
+    }, b.color ?? 0x3a86ff));
+  });
+}

@@ -41,13 +41,13 @@ await step('boot');
 for (let i = 0; i < 3; i++) { await click(180, 320); await p.waitForTimeout(400); }
 await p.waitForTimeout(6500);
 await step('after_intro');
-for (let i = 0; i < 14; i++) { await click(180, 300); await p.waitForTimeout(60); }
+for (let i = 0; i < 26; i++) { await click(180, 300); await p.waitForTimeout(60); }
 await step('after_taps');
 await click(236, 567); // 추천 고용
 await p.waitForTimeout(600);
 await step('after_hire');
 // 디버그로 돈을 늘리고 연속 고용 → 마을 공개
-await p.evaluate(() => { window.__bunsin.G.s.money = 5000; });
+await p.evaluate(() => { window.__bunsin.G.s.money = 1e8; });
 for (let i = 0; i < 16; i++) { await click(236, 567); await p.waitForTimeout(120); }
 await p.waitForTimeout(4500);
 await step('after_reveal');
@@ -123,7 +123,7 @@ await press('앨범에 저장됨'); await p.waitForTimeout(400);
 await p.evaluate(() => { window.__bunsin.game.scene.getScene('UI').switchTab('clones'); });
 await p.waitForTimeout(500);
 await step('clones_tab');
-await press('📷 추억 앨범 (' + (await p.evaluate(() => JSON.parse(localStorage.getItem('bunsin_album_v1') || '[]').length)) + '/30)');
+await press('앨범 보기');
 await p.waitForTimeout(800);
 await step('album');
 await press('닫기');
@@ -143,7 +143,9 @@ await step('account');
 await drain();
 await p.evaluate(() => { const ui = window.__bunsin.game.scene.getScene('UI'); ui.switchTab('home'); const d = ui.debug; d.toggle(); });
 await press('도시+1 준비'); await p.waitForTimeout(300);
-await p.evaluate(() => { const ui = window.__bunsin.game.scene.getScene('UI'); if (ui.debug.root.visible) ui.debug.toggle(); ui.switchTab('village'); ui.village().onTruckTap(); });
+await p.evaluate(() => { const ui = window.__bunsin.game.scene.getScene('UI'); if (ui.debug.root.visible) ui.debug.toggle(); });
+await drain();
+await p.evaluate(() => { const ui = window.__bunsin.game.scene.getScene('UI'); ui.switchTab('village'); ui.village().onTruckTap(); });
 await p.waitForTimeout(600);
 await step('move_card');
 await p.evaluate(() => { const ui = window.__bunsin.game.scene.getScene('UI'); const all = []; const walk = (o) => { all.push(o); (o.list || []).forEach(walk); }; ui.children.list.forEach(walk); const t = all.find((o) => o.text === '이사하기'); const idx = t.parentContainer.list.indexOf(t); t.parentContainer.list[idx - 1].emit('pointerdown'); });

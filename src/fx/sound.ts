@@ -20,7 +20,9 @@ function tone(type: OscillatorType, f0: number, f1: number, dur: number, vol = 0
 }
 let lastTap = 0;
 export const sfx = {
-  tap() { const n = performance.now(); if (n - lastTap < 45) return; lastTap = n; tone('square', 880, 660, 0.04, 0.05); },
+  /** 탭: 콤보가 오를수록 음높이 상승(pitch 1~1.5) */
+  tap(pitch = 1) { const n = performance.now(); if (n - lastTap < 45) return; lastTap = n; tone('square', 880 * pitch, 660 * pitch, 0.04, 0.05); tone('sine', 1760 * pitch, 1760 * pitch, 0.03, 0.03); },
+  coin() { tone('triangle', 1975, 2637, 0.06, 0.04); },
   pop() { tone('sine', 300, 1000, 0.12, 0.18); },
   ding() { tone('triangle', 1318, 1318, 0.7, 0.2); tone('triangle', 1760, 1760, 0.9, 0.12, 0.08); },
   fever() { [523, 659, 784, 1046].forEach((f, i) => tone('square', f, f, 0.12, 0.07, i * 0.08)); },
