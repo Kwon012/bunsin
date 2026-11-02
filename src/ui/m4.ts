@@ -68,7 +68,7 @@ export function uniqueCard(ctx: UiCtx, id: string, done: () => void) {
   if (!d || !u) { done(); return; }
   sfx.ding();
   const eff = d.passive === 'job' ? `배치한 건물 수입 +${Math.round(Number(d.value) * 100)}%` : d.passive === 'tap' ? `탭 수입 +${Math.round(Number(d.value) * 100)}%` : `월급날 보너스 +${Math.round(Number(d.value) * 100)}%`;
-  showCard(ctx.sc, { title: `✨ 개성 분신: ${u.name}`, titleColor: C.gold, lines: [`같은 얼굴 + ${d.prop}`, eff, u.placedJob ? `자동 배치: ${job(u.placedJob).name}` : '빈 건물이 생기면 자동 배치', '이사해도 함께 갑니다'], doodle: true,
+  showCard(ctx.sc, { title: `✨ 개성 분신: ${u.name}`, titleColor: '#b5651d', lines: [`같은 얼굴 + ${d.prop}`, eff, u.placedJob ? `자동 배치: ${job(u.placedJob).name}` : '빈 건물이 생기면 자동 배치', '이사해도 함께 갑니다'], doodle: true,
     buttons: [{ label: '이름 바꾸기', color: 0x8338ec, cb: () => { const n = window.prompt('개성 분신 이름', u.name); if (n) renameUnique(G.s, id, n); } }, { label: '좋아!', color: 0x06a77d }] }, done);
 }
 

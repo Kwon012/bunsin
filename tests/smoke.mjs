@@ -61,11 +61,19 @@ console.log('press 받기', await press('받기'));
 await p.waitForTimeout(800);
 await p.evaluate(() => { const G = window.__bunsin.G; G.s.lastSeen -= 8 * 3600e3; });
 await p.waitForTimeout(300);
+await drain();
 await step('pre_end');
 await p.evaluate(() => { const G = window.__bunsin.G; G.s.lastSeen = Date.now() - 8 * 3600e3; document.dispatchEvent(new Event('visibilitychange')); });
 await p.waitForTimeout(800);
+await step('parade');
+console.log('press 건너뛰기', await press('건너뛰기 ▶'));
+await p.waitForTimeout(600);
 await step('settle');
 console.log('press 받기', await press('받기'));
+await p.waitForTimeout(600);
+await step('stamp');
+await p.waitForTimeout(2000);
+console.log('press 쾅', await press('쾅! 찍기')); await p.waitForTimeout(400); console.log('stamp days', await p.evaluate(() => window.__bunsin.G.s.stamp.days));
 await p.waitForTimeout(600);
 await step('end');
 // 팀 보너스(25명)·해금·자격증·피버
@@ -145,6 +153,18 @@ console.log('city', await p.evaluate(() => [window.__bunsin.G.s.cityIdx, window.
 await drain();
 await p.waitForTimeout(500);
 await step('busan_home');
+// M6: 설정·사진 모드(밤)·마무리 카드
+await drain();
+await p.evaluate(() => { const ui = window.__bunsin.game.scene.getScene('UI'); ui.switchTab('village'); ui.queue.push((d) => { import('data:text/javascript,').catch(() => {}); d(); }); });
+await press('📷'); await p.waitForTimeout(400); await press('밤'); await p.waitForTimeout(800);
+await step('photo_night');
+await drain();
+await press('⚙️'); await p.waitForTimeout(400); await step('settings'); await press('닫기');
+await p.evaluate(() => { const { G } = window.__bunsin; G.s.money = 0; G.s.director.sinceHappening = 40; G.s.director.sinceEvent = 0; });
+await p.waitForTimeout(700);
+await step('closing');
+await drain();
+console.log('closing cards', await p.evaluate(() => window.__bunsin.G.s.metrics.closingCards));
 console.log('ERRORS', errs.length ? errs.slice(0, 5).join('\n---\n') : 'none');
 await b.close();
 process.exit(errs.length ? 1 : 0);

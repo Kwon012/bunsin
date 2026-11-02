@@ -24,7 +24,7 @@ export class DebugPanel {
     this.info = txt(scene, 8, 360, '', 10, '#9effa0', { wordWrap: { width: W - 16 } });
     this.root.add(this.info);
     if (new URLSearchParams(location.search).get('debug') === '1') {
-      this.dbgBtn = button(scene, W - 64, 88, 40, 22, 'DBG', () => this.toggle(), 0xef476f, 10).setDepth(2999);
+      this.dbgBtn = button(scene, W - 106, 88, 40, 22, 'DBG', () => this.toggle(), 0xef476f, 10).setDepth(2999);
     }
   }
 

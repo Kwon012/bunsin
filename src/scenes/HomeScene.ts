@@ -121,6 +121,10 @@ export class HomeScene extends Phaser.Scene {
   drawUniques() {
     this.uniqueLayer?.destroy();
     this.uniqueLayer = this.add.container(0, 0).setDepth(45);
+    if (G.s.flags.memorial7) {
+      this.uniqueLayer.add(this.add.image(BODY.x, BODY.y + 92, 'clone_inv').setScale(1.4 / R));
+      this.uniqueLayer.add(this.add.image(BODY.x, BODY.y + 76, 'crown').setScale(1 / R));
+    }
     G.s.uniques.forEach((u, i) => {
       const x = i % 2 === 0 ? BODY.x - 70 - Math.floor(i / 2) * 22 : BODY.x + 70 + Math.floor(i / 2) * 22;
       const y = BODY.y + 60;

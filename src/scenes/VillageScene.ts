@@ -9,6 +9,7 @@ import type { GameEvent } from '../core/state';
 import type { Job } from '../data/economy';
 import { SCENES, pickLine } from '../data/content';
 import { eventBubble } from '../ui/m4';
+import { timeOfDay, TINT, type TimeOfDay } from '../ui/m6';
 
 export const ZONE_H = 170;
 const DOT_CAP = 300; // 마을 표시 상한
@@ -30,6 +31,11 @@ export class VillageScene extends Phaser.Scene {
   onBubbleTap?: () => void;
   private bubble?: Phaser.GameObjects.Container;
   private recentLines: string[] = [];
+  private tint!: Phaser.GameObjects.Rectangle;
+  private winLights: Phaser.GameObjects.Rectangle[] = [];
+  private todOverride: TimeOfDay | null = null;
+  private todTimer = 0;
+  private commuters: Phaser.GameObjects.Image[] = [];
 
   constructor() { super('Village'); }
 
@@ -142,6 +148,18 @@ export class VillageScene extends Phaser.Scene {
       const lb = txt(this, b.x - 55, b.y - 42, `⭐${u.name}`, 9, '#1d1f2b', { backgroundColor: '#ffd166', padding: { x: 2, y: 1 } }).setOrigin(0.5);
       this.layer.add([img, lb]);
     }
+    // 시간대: 밤 야근 불빛, 아침 출근 행렬
+    this.winLights = this.buildings.filter((b) => isUnlocked(s, b.j)).flatMap((b) => [-36, 0, 36].map((dx) => this.add.rectangle(b.x + dx, b.y - 22, 14, 10, 0xffe066).setVisible(false)));
+    this.layer.add(this.winLights);
+    this.commuters = [];
+    for (let i = 0; i < 12; i++) {
+      const c = this.add.image(-20 - i * 18, this.worldH - 60 - (i % 3) * 8, 'clone_job').setScale(1 / R).setVisible(false);
+      this.commuters.push(c); this.layer.add(c);
+      this.tweens.add({ targets: c, x: W + 20, duration: 9000, delay: i * 400, repeat: -1 });
+    }
+    this.tint?.destroy();
+    this.tint = this.add.rectangle(W / 2, H / 2, W * 3, H * 3, 0x000000, 0).setScrollFactor(0).setDepth(250);
+    this.applyTod();
     this.cameras.main.setBounds(0, 0, W, this.worldH);
     this.refresh();
     if (!this.cy) this.scrollTo(this.worldH);
@@ -189,6 +207,19 @@ export class VillageScene extends Phaser.Scene {
     this.tweens.addCounter({ from: R * 3, to: R, duration: 1800, delay: 300, ease: 'Cubic.easeInOut',
       onUpdate: (tw) => { cam.setZoom(tw.getValue() ?? R); this.scrollTo(Phaser.Math.Linear(first.y, this.worldH * 0.62, tw.progress)); },
       onComplete: () => { this.time.delayedCall(900, () => { runners.forEach((r) => r.destroy()); this.refresh(); done(); }); } });
+  }
+
+  setTimeOfDay(t: TimeOfDay | null) { this.todOverride = t; this.applyTod(); }
+  applyTod() {
+    const t = this.todOverride ?? timeOfDay();
+    const [color, a] = TINT[t];
+    this.tint?.setFillStyle(color, a);
+    this.winLights.forEach((l) => l.setVisible(t === 'night' || t === 'evening'));
+    this.commuters.forEach((c) => c.setVisible(t === 'morning'));
+  }
+  update(_t: number, delta: number) {
+    this.todTimer += delta;
+    if (this.todTimer > 10000) { this.todTimer = 0; this.applyTod(); }
   }
 
   /** 탭 전환용 짧은 줌 */

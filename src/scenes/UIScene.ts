@@ -9,7 +9,10 @@ import { PopupQueue } from '../ui/popup';
 import { Hud } from '../ui/hud';
 import { HireSheet } from '../ui/hireSheet';
 import { ClonesPanel, ShopPanel } from '../ui/panels';
-import { introFlow, revealFlow, paydayFlow, teamFlow, certFlow, unlockFlow, drawFinger, settlementFlow, type UiCtx } from '../ui/flows';
+import { introFlow, revealFlow, paydayFlow, teamFlow, certFlow, unlockFlow, drawFinger, type UiCtx } from '../ui/flows';
+import { paradeFlow, settlementFlow, stampFlow, closingFlow, settingsCard, photoModeFlow } from '../ui/m6';
+import { canStamp, shouldClosing } from '../core/session';
+import { totalClones } from '../core/econ';
 import { sound } from '../fx/sound';
 import { DebugPanel } from '../debug/debug';
 import { shouldSpawnEvent, pickEvent, markEventShown, missEvent, shouldNews, nextNews } from '../core/director';
@@ -98,7 +101,11 @@ export class UIScene extends Phaser.Scene implements UiCtx {
     const snd = button(this, W - 22, 88, 34, 22, G.s.settings.sound ? '🔊' : '🔇', () => {
       G.s.settings.sound = !G.s.settings.sound; sound.enabled = G.s.settings.sound; snd.setLabel(G.s.settings.sound ? '🔊' : '🔇');
     }, 0x2a2d3e, 11).setDepth(610);
-    if (G.s.pendingOffline) this.queue.push((d) => settlementFlow(this, d), 'settle');
+    this.sessionStart();
+    if (G.s.pendingOffline) this.queueSettlement();
+    else if (!G.isNew) this.time.delayedCall(3000, () => this.maybeStamp());
+    // 설정
+    button(this, W - 60, 88, 34, 22, '⚙️', () => this.queue.push((d) => settingsCard(this, d), 'settings'), 0x2a2d3e, 11).setDepth(610);
     // 시작 화면
     if (G.isNew && !G.s.flags.introDone) this.queue.push((d) => introFlow(this, d), 'intro');
     const last = G.s.flags.lastTab === 1 && G.s.flags.villageRevealed ? 'village' : 'home';
@@ -114,12 +121,22 @@ export class UIScene extends Phaser.Scene implements UiCtx {
     on('unlock', (e) => e.t === 'unlock' && this.queue.push((d) => unlockFlow(this, e.jobId, d), 'unlock'));
     on('unit', (e) => { if (e.t !== 'unit') return; const u = UNITS[e.index]; if (u) this.toast(`새 단위! ${lineText('unit', u.name) ?? u.name}`, C.gold); });
     on('fever_end', (e) => e.t === 'fever_end' && this.toast(`피버 끝! 이번 콤보 ${e.combo} · 오늘 최고 콤보 ${Math.max(G.s.bestCombo, e.combo)}`));
-    G.bus.on('resumed', () => { if (G.s.pendingOffline && !this.queue.has('settle')) this.queue.push((d) => settlementFlow(this, d), 'settle', true); });
+    G.bus.on('resumed', () => { this.sessionStart(); if (G.s.pendingOffline && !this.queue.has('settle')) this.queueSettlement(); else this.maybeStamp(); });
     on('manager', () => this.queue.push((d) => managerFlow(this, d), 'manager'));
     on('top_hired', (e) => e.t === 'top_hired' && this.queue.push((d) => topHiredFlow(this, e.jobId, d), 'top'));
     on('unique', (e) => e.t === 'unique' && this.queue.push((d) => uniqueCard(this, e.id, d), 'unique'));
     on('crown', (e) => e.t === 'crown' && this.toast(`👑 ${e.total}번째 분신! 왕관 쓴 기념 분신`, C.gold));
   }
+
+  private sessEarned = 0; private sessHired = 0;
+  sessionStart() { this.sessEarned = G.s.totalEarned; this.sessHired = G.s.totalHired; }
+  /** 귀가 행렬 → 정산서 → (하루 첫) 출근 도장 */
+  queueSettlement() {
+    this.queue.push((d) => paradeFlow(this, d), 'parade');
+    this.queue.push((d) => settlementFlow(this, d), 'settle');
+    this.queue.push((d) => { this.maybeStamp(); d(); }, 'stampcheck');
+  }
+  maybeStamp() { if (canStamp(G.s) && !this.queue.has('stamp') && G.s.flags.introDone) this.queue.push((d) => stampFlow(this, d), 'stamp'); }
 
   /** 짧은 알림(겹치면 아래로 쌓임, 대기열 밖) */
   toast(text: string, color = '#ffffff') {
@@ -181,6 +198,11 @@ export class UIScene extends Phaser.Scene implements UiCtx {
       const e = pickEvent(s);
       if (e) { markEventShown(s, e.id); this.pendingEvent = { e, left: A.X_eventBubbleLifeSec }; G.bus.emit('event_bubble', e); }
     }
+    if (!this.queue.busy && !this.pendingEvent && s.flags.villageRevealed && shouldClosing(s)) {
+      this.queue.push((d) => closingFlow(this, s.totalEarned - this.sessEarned, s.totalHired - this.sessHired, d), 'closing');
+    }
+    // 첫날 출근 도장: 첫 5분 경험 뒤
+    if (G.isNew && s.sessionTime > 300 && canStamp(s) && !this.queue.busy) this.maybeStamp();
     if (shouldNews(s)) {
       const t = nextNews(s);
       this.newsText.setText(`📰 ${t}`);
@@ -196,7 +218,7 @@ export class UIScene extends Phaser.Scene implements UiCtx {
     this.newsText.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
       this.queue.push((d) => photoCard(this, this.newsText.text, 'news', d), 'newsshare');
     });
-    const cam = button(this, W - 60, 108, 44, 22, '📷', () => this.queue.push((d) => photoCard(this, `사진 모드: ${G.s.totalHired}명의 마을`, 'photo', d), 'photo'), 0x2a2d3e, 12);
+    const cam = button(this, W - 60, 108, 44, 22, '📷', () => this.queue.push((d) => photoModeFlow(this, d), 'photo'), 0x2a2d3e, 12);
     this.jumpBar = this.add.container(0, 0);
     this.villageBar.add([bg, this.newsText, cam, this.jumpBar]);
     this.rebuildJumpBar();
