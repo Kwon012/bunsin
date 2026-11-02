@@ -1,0 +1,15 @@
+﻿key,value,unit,note
+open_trigger,manager_unlock_next_payday,-,통장 개설 = 매니저 해금 다음 월급날(두 기능이 한순간에 열리지 않게)
+open_bonus_income_sec,600,초,개설 축하금 = 초당 수입 × 이 값 (첫 배당이 바로 보이게)
+auto_save_ratio,0.1,비율,접속 중 초당 수입의 10% 자동 적립(끌 수 있음). 탭·월급날·오프라인 수입 제외
+dividend_rate,0.1,비율,월급날마다 지금 종목 잔액의 10% 배당
+cap_income_sec,7200,초,지금 종목 한도 = 초당 수입 × 이 값. 차면 배당은 현금
+offline_dividend_full_paydays,16,회,"오프라인 중 배당 100%로 받는 월급날 수(8시간), 이후 25%"
+offline_dividend_after_ratio,0.25,비율,위 이후 배당 비율
+break_suggest_eta_sec,180,초,다음 추천 구매까지 이 시간 초과 + 통장으로 살 수 있으면 '통장 깨서 지금 사기'
+price_change,0,-,가격 변동 없음(0). 통장은 줄지 않는다
+held_stock_dividend_rate,0.1,비율,이사 후 보유 종목: 월급날마다 잔액의 10%를 현금 배당
+held_stock_dividend_cap_income_sec,360,초,보유 종목 배당 합계 상한 = 지금 초당 수입 × 이 값(월급날 1회)
+held_stock_sellable,1,-,보유 종목은 언제든 매도 가능(1). 깨기는 지금 종목 → 보유 종목 순
+new_stock_per_city,1,-,이사하면 지금 종목은 보유 종목이 되고 새 도시 종목이 열림. 자동 적립·직접 입금은 지금 종목만
+paid_break,0,-,유료 깨기·유료 한도 확장 없음(0)

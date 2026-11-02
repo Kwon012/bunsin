@@ -1,0 +1,25 @@
+﻿key,value,unit,note
+tap_base,1,원,본체 탭 1회 기본 수익. v0.2: 도시별 값은 cities.csv tap_base(= 그 도시 1칸 수입)
+tap_income_ratio,0.12,비율,탭 1회 = 기본 + 초당 수입 × 이 값
+fever_mult,3,배,응원 피버 중 분신 전원 수입 배수
+fever_duration_sec,15,초,응원 피버 지속 시간
+payday_first_sec,240,초,첫 세션의 첫 월급날 시점
+payday_interval_sec,1800,초,월급날 주기
+payday_min_income_sec,120,초,월급날 보너스 최소액 = 초당 수입 × 이 값
+offline_cap_sec,28800,초,오프라인 정산 상한(이후에도 아래 비율로 계속)
+offline_after_cap_ratio,0.25,비율,상한 이후 오프라인 수입 속도
+manager_unlock_paydays,4,회,접속 중 월급날 4회째 매니저 해금. 이사 후에도 유지
+cert_price_mult,4,배,자격증 가격 = (해당 인원 + 10)명째 고용가 × 이 값
+team_bonus_mult,2,배,팀 보너스 배수 (milestones.csv)
+cert_mult,3,배,자격증 배수 (milestones.csv)
+move_recommend_eta_sec,180,초,다음 추천 구매까지 이 시간 이상이면 이사 추천
+fame_base,25000000,원,v0.2에서는 쓰지 않음. 명성 = floor(√(도시 누적 수입 ÷ cities.csv fame_unit))
+fame_city_mult,3,배,"v0.2에서는 쓰지 않음(도시별 fame_unit으로 대체, R-014)"
+fame_income_bonus,0.2,비율,명성 1당 수입 +20% (더하기)
+village_reveal_clones,15,명,마을 공개 시점(분신 수)
+event_idle_sec,12,초,무반응 이 시간 후 사건 말풍선
+event_min_gap_sec,30,초,사건 최소 간격(세션 첫 3분은 20초)
+news_interval_sec,60,초,마을 뉴스 주기
+hidden_scenes_per_city,6,개,도시별 숨은 장면 수
+move_settle_first_clones,3,명치,이사 정착금 = 새 도시 1칸 첫 분신 가격 × 이 값(R-014). 도시별 금액은 cities.csv settle_money
+slot_unlock_default,25,명,다음 칸 해금 = 이전 칸 이 인원(jobs.csv unlock_prev_count가 우선)

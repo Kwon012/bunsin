@@ -1,18 +1,28 @@
-# 작업 규칙
+# 분신 키우기 PoC — 작업 규칙 (요약, 원문: docs/bunsin_phaser_poc_prompt.md)
 
-- 작업 단위마다 commit + push 한다.
-- 웹 게임(Phaser 3, CDN 로드)으로 만든다. 번들러/빌드 단계 없음 → 휴대폰 GitHub 웹 편집기로 수정해도 바로 배포된다.
-- push 시 `.github/workflows/pages.yml`이 GitHub Pages로 자동 배포한다. 화면 우하단 `build <sha>`로 배포 버전을 확인한다.
-- 승인 없이 핵심 기획을 변경하지 않는다. 실행하지 않은 코드를 검증 완료라고 하지 않는다.
+- 작업(마일스톤) 단위마다 commit + push. 브랜치: `claude/cool-mccarthy-npi1yj` (사용자 승인).
+- push → `.github/workflows/pages.yml`이 test·build 후 GitHub Pages 배포. 우하단 `build <sha>`로 버전 확인.
+- 기획서 `docs/bunsin-gdd.md` 기능을 생략·축소·임의 변경 금지. 못 만든 것은 보고에 '미구현 + 이유'.
+- 핵심 기획(재화·성장 공식·이사/명성·수익화·설계 원칙 8개) 변경 금지. 새 화폐·기획서에 없는 기능 금지(디버그 도구 예외).
+- 경제 수치는 `data/economy_v0.2/*.csv`에서만 읽는다(코드에 박지 않음). CSV가 기획서 숫자보다 우선.
+- 기획서에 없는 값은 `src/core/assumptions.ts`(A1~A13) → 없으면 가장 단순한 해석 + `ASSUMPTIONS.md` 한 줄.
+- 실행하지 않은 것을 "검증 완료"라고 쓰지 않는다. 돌린 명령과 결과를 적는다.
+- 토큰 절약: 테스트는 dot reporter, 긴 출력 금지, 서브에이전트 금지.
 
 ## 구조
+- `src/core/` 순수 TS 경제 로직(Phaser import 금지) · `src/data/` CSV 로더·검증 · `src/scenes|ui|fx/` 화면·연출(경제 수식 금지) · `src/debug/` `?debug=1`
+- `data/economy_v0.2/` 경제 CSV · `data/content/` 콘텐츠 CSV(임시 열 구성: docs/content-csv.md) · `tests/` Vitest
 
-- `index.html` — 진입 HTML (Phaser CDN, 모바일 viewport)
-- `src/main.js` — 게임 설정과 씬
-- `assets/` — 이미지/사운드 (필요 시 생성, 배포에 자동 포함)
-
-## 로컬 실행
-
+## 명령
 ```bash
-python3 -m http.server 8000
+npm install
+```
+```bash
+npm test
+```
+```bash
+npm run build
+```
+```bash
+npm run dev
 ```

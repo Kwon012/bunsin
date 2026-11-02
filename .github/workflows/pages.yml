@@ -22,20 +22,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Build site (no bundler, copy static files + stamp build id)
-        run: |
-          mkdir -p _site
-          cp index.html _site/
-          cp -r src _site/
-          [ -d assets ] && cp -r assets _site/ || true
-          BUILD_ID="${GITHUB_SHA::7}"
-          sed -i "s/__BUILD_ID__/${BUILD_ID}/g" _site/index.html
-          touch _site/.nojekyll
-
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npm run build
+      - run: touch dist/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: dist
       - id: deployment
         uses: actions/deploy-pages@v4
