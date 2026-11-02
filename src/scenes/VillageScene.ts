@@ -4,9 +4,11 @@ import { G } from '../game';
 import { city, cityJobs, isUnlocked, owned, totalClones } from '../core/econ';
 import { canMove } from '../core/recommend';
 import { formatKR } from '../core/format';
-import { setupCam, txt, W, H, R, C, TIER_COLOR } from '../ui/kit';
+import { setupCam, txt, W, H, R, TIER_COLOR } from '../ui/kit';
 import type { GameEvent } from '../core/state';
 import type { Job } from '../data/economy';
+import { SCENES, pickLine } from '../data/content';
+import { eventBubble } from '../ui/m4';
 
 export const ZONE_H = 170;
 const DOT_CAP = 300; // 마을 표시 상한
@@ -24,6 +26,10 @@ export class VillageScene extends Phaser.Scene {
   private handlers: [string, (e: GameEvent) => void][] = [];
   onBuildingTap?: (j: Job) => void;
   onTruckTap?: () => void;
+  onSceneTap?: (id: string) => void;
+  onBubbleTap?: () => void;
+  private bubble?: Phaser.GameObjects.Container;
+  private recentLines: string[] = [];
 
   constructor() { super('Village'); }
 
@@ -31,7 +37,10 @@ export class VillageScene extends Phaser.Scene {
     setupCam(this);
     this.build();
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => { this.dragY = p.y; this.dragMoved = 0; });
-    this.input.on('pointerup', () => { this.dragY = null; });
+    this.input.on('pointerup', (p: Phaser.Input.Pointer, over: Phaser.GameObjects.GameObject[]) => {
+      this.dragY = null;
+      if (!this.dragging && !over.length) this.cloneReact(p.worldX, p.worldY);
+    });
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       if (this.dragY === null || !p.isDown) return;
       const dy = (p.y - this.dragY) / R / this.cameras.main.zoom * R;
@@ -43,7 +52,32 @@ export class VillageScene extends Phaser.Scene {
     on('unlock', () => this.build());
     on('move', () => this.build());
     on('top_hired', () => this.build());
+    on('unique', () => this.build());
+    G.bus.on('event_bubble', this.showBubble, this);
+    G.bus.on('event_bubble_end', this.hideBubble, this);
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this.handlers.forEach(([k, f]) => G.bus.off(k, f)));
+  }
+
+  showBubble() {
+    this.hideBubble();
+    const opts = this.buildings.filter((b) => isUnlocked(G.s, b.j));
+    const b = opts[Math.floor(Math.random() * opts.length)];
+    if (!b) return;
+    this.bubble = eventBubble(this, Phaser.Math.Clamp(b.x + (b.x < W / 2 ? 90 : -90), 40, W - 40), b.y + 10, () => this.onBubbleTap?.());
+    this.layer.add(this.bubble);
+  }
+  hideBubble() { this.bubble?.destroy(); this.bubble = undefined; }
+
+  /** 분신 탭 반응: 가장 가까운 분신이 한마디(같은 대사 재등장 간격) */
+  cloneReact(x: number, y: number) {
+    let best: Phaser.GameObjects.Image | null = null; let bd = 26 * 26;
+    for (const b of this.buildings) for (const d of b.dots) { const dd = (d.x - x) ** 2 + (d.y - y) ** 2; if (dd < bd) { bd = dd; best = d; } }
+    if (!best) return;
+    const d = best;
+    this.tweens.add({ targets: d, y: d.y - 10, duration: 120, yoyo: true });
+    const t = txt(this, d.x, d.y - 12, pickLine('clone_tap', this.recentLines), 10, '#222', { backgroundColor: '#ffffff', padding: { x: 4, y: 2 } }).setOrigin(0.5, 1).setDepth(300);
+    this.layer.add(t);
+    this.time.delayedCall(1500, () => t.destroy());
   }
 
   get dragging() { return this.dragMoved > 6; }
@@ -88,6 +122,26 @@ export class VillageScene extends Phaser.Scene {
     this.truck.setInteractive({ useHandCursor: true });
     this.truck.on('pointerup', () => { if (!this.dragging) this.onTruckTap?.(); });
     this.layer.add([tb, this.truck]);
+    // 숨은 장면 6개(도시마다 같은 목록, 위치는 도시별 고정 시드)
+    const rnd = new Phaser.Math.RandomDataGenerator([`${s.cityIdx}`]);
+    const found = s.scenesFound[city(s).id] ?? [];
+    SCENES.forEach((sc, i) => {
+      const y = 140 + ((i + 0.5) / SCENES.length) * (this.worldH - 260) + rnd.between(-30, 30);
+      const x = rnd.pick([28, 330, rnd.between(150, 210)]);
+      const got = found.includes(sc.id);
+      const spot = txt(this, x, y, got ? `✔ ${sc.name}` : '?', got ? 9 : 14, got ? '#1d1f2b' : '#ffffff', { backgroundColor: got ? '#ffffffaa' : '#00000055', padding: { x: 4, y: 2 } }).setOrigin(0.5).setAlpha(got ? 0.9 : 0.55);
+      spot.setInteractive({ useHandCursor: true });
+      spot.on('pointerup', () => { if (!this.dragging) this.onSceneTap?.(sc.id); });
+      this.layer.add(spot);
+    });
+    // 개성 분신 표시(건물당 1칸)
+    for (const b of this.buildings) {
+      const u = s.uniques.find((x) => x.placedJob === b.j.id);
+      if (!u) continue;
+      const img = this.add.image(b.x - 55, b.y - 20, 'clone_biz').setScale(1.5 / R);
+      const lb = txt(this, b.x - 55, b.y - 42, `⭐${u.name}`, 9, '#1d1f2b', { backgroundColor: '#ffd166', padding: { x: 2, y: 1 } }).setOrigin(0.5);
+      this.layer.add([img, lb]);
+    }
     this.cameras.main.setBounds(0, 0, W, this.worldH);
     this.refresh();
     if (!this.cy) this.scrollTo(this.worldH);

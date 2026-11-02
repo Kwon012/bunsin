@@ -1,0 +1,9 @@
+id,name,condition,hint1,hint2,passive,value,prop
+u_night,야근왕,night_23,밤이 깊을 때 누군가 깨어 있다,밤 11시에 접속해 보세요,job,0.1,다크서클·커피
+u_mega,확성기 분신,fever_streak,응원이 끊이지 않으면…,피버를 끝나자마자 다시 터뜨려 보세요,tap,0.2,확성기
+u_payday,첫 월급 분신,first_payday,기다리면 오는 날이 있다,첫 월급날을 맞이하세요,payday,0.1,월급봉투
+u_team,단체사진 분신,team_25,함께하면 사진이 남는다,한 직종 25명을 모아 보세요,job,0.1,카메라
+u_hundred,백 번째 분신,clones_100,숫자가 커지면 특별한 아이가 온다,분신 100명을 모아 보세요,job,0.1,왕관
+u_cert,자격증 분신,first_cert,공부하는 분신이 있다,자격증을 하나 따 보세요,job,0.1,안경
+u_piggy,저금통 분신,account_open,월급날마다 불어나는 무언가,배당주 통장을 열어 보세요,payday,0.1,돼지 저금통
+u_stamp,개근 분신,stamp_3,꾸준함은 배신하지 않는다,출근 도장을 3일 찍어 보세요,tap,0.2,출근 카드

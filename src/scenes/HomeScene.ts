@@ -10,6 +10,7 @@ import { sfx } from '../fx/sound';
 import { setupCam, txt, W, R, C } from '../ui/kit';
 import type { GameEvent } from '../core/state';
 import type { Tier } from '../data/economy';
+import { eventBubble } from '../ui/m4';
 
 const CAP = 150; // 홈 표시 상한
 const BODY = { x: 180, y: 300 };
@@ -39,6 +40,9 @@ export class HomeScene extends Phaser.Scene {
   private faceReset?: Phaser.Time.TimerEvent;
   private handlers: [string, (e: GameEvent) => void][] = [];
   playerTapTimes: number[] = [];
+  onBubbleTap?: () => void;
+  private bubble?: Phaser.GameObjects.Container;
+  private uniqueLayer?: Phaser.GameObjects.Container;
 
   constructor() { super('Home'); }
 
@@ -75,8 +79,12 @@ export class HomeScene extends Phaser.Scene {
     this.on2('fever_end', () => this.feverEnd());
     this.on2('payday', () => this.cheer());
     this.on2('crown', () => this.time.delayedCall(800, () => { const c = this.clones[this.clones.length - 1]; if (c) this.add.image(c.x, c.y - 14, 'crown').setScale(1 / R).setDepth(c.depth + 1); }));
-    this.on2('move', () => { this.rebuildClones(); this.refreshStage(); this.drawWindow(); });
+    this.on2('move', () => { this.rebuildClones(); this.refreshStage(); this.drawWindow(); this.drawUniques(); });
     this.on2('tap', (e) => { if (e.t === 'tap' && e.auto) this.tapFx(BODY.x + Phaser.Math.Between(-30, 30), BODY.y - 40, e.amount, true); });
+    this.on2('unique', () => this.drawUniques());
+    G.bus.on('event_bubble', () => { this.bubble?.destroy(); this.bubble = eventBubble(this, 100, 250, () => this.onBubbleTap?.()); }, this);
+    G.bus.on('event_bubble_end', () => { this.bubble?.destroy(); this.bubble = undefined; }, this);
+    this.drawUniques();
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this.handlers.forEach(([k, f]) => G.bus.off(k, f)));
   }
 
@@ -90,6 +98,18 @@ export class HomeScene extends Phaser.Scene {
     g.fillStyle(0x223344, 0.45).fillRect(64, 98, 22, 42).fillTriangle(60, 100, 75, 88, 90, 100);
     g.lineStyle(4, 0x8d6e4a, 1).strokeRect(20, 86, 110, 92).lineBetween(75, 86, 75, 178).lineBetween(20, 132, 130, 132);
     this.windowLabel.setText(`잠긴 구역: ${city(G.s).topBuilding}`);
+  }
+
+  /** 개성 분신은 홈에서도 본체 곁에 보인다(이사 후 새 도시 첫 화면부터) */
+  drawUniques() {
+    this.uniqueLayer?.destroy();
+    this.uniqueLayer = this.add.container(0, 0).setDepth(45);
+    G.s.uniques.forEach((u, i) => {
+      const x = i % 2 === 0 ? BODY.x - 70 - Math.floor(i / 2) * 22 : BODY.x + 70 + Math.floor(i / 2) * 22;
+      const y = BODY.y + 60;
+      this.uniqueLayer!.add(this.add.image(x, y, 'clone_biz').setScale(1.3 / R));
+      this.uniqueLayer!.add(txt(this, x, y - 22, '⭐', 9).setOrigin(0.5));
+    });
   }
 
   refreshStage() {

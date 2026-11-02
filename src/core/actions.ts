@@ -4,8 +4,10 @@ import { cityJobs, eco, hireCost, hireCostN, isUnlocked, job, maxAffordable, nex
 import type { GameEvent, GameState } from './state';
 import { earn, firstAt, happening } from './ledger';
 import { unitIndex } from './format';
+import { pushRecent } from './director';
+import { autoPlace } from './uniques';
 
-export type HireAmount = 1 | 10 | 'max';
+export type HireAmount = number | 'max';
 
 export function hireQuote(s: GameState, jobId: string, amt: HireAmount): { n: number; cost: number } {
   const j = job(jobId);
@@ -32,14 +34,19 @@ export function hire(s: GameState, jobId: string, amt: HireAmount, out: GameEven
   happening(s);
   firstAt(s, 'first_clone');
   // 팀 보너스 단계
-  for (const m of D.team) if (before < m.count && before + n >= m.count) out.push({ t: 'team', jobId, count: m.count });
+  for (const m of D.team) if (before < m.count && before + n >= m.count) {
+    out.push({ t: 'team', jobId, count: m.count });
+    if (m.count === 25) s.flags.team25 = 1;
+  }
   // 새 칸 해금
   for (const id of lockedBefore) if (isUnlocked(s, job(id))) {
     out.push({ t: 'unlock', jobId: id });
+    pushRecent(s, `분신 #${s.totalHired}이(가) ${job(id).name}(으)로 승진했다`);
     const tier = job(id).tier;
     if (tier === 'job') firstAt(s, 'office');
     if (tier === 'biz') firstAt(s, 'shop');
   }
+  if (lockedBefore.some((id) => isUnlocked(s, job(id)))) autoPlace(s);
   // 기념 분신(100·1000번째)
   const after = totalClones(s);
   for (const c of [100, 1000, 10000]) if (clonesBefore < c && after >= c) out.push({ t: 'crown', total: c });

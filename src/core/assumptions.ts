@@ -53,5 +53,14 @@ export const A = {
   X_depositCapped: true,
   /** X-11 직접 탭 > 매니저일 때 '직접 탭 = 더 빠름' 표시 기준: 최근 5초 탭 속도 */
   X_tapRateWindowSec: 5,
+  /** X-17 사건 말풍선이 떠 있는 시간(초). 안 누르면 '놓침' */
+  X_eventBubbleLifeSec: 25,
+  /** X-18 같은 사건 재등장 최소 간격(누적 플레이 초) */
+  X_eventRepeatGapSec: 600,
+  /** X-19 세션 첫 3분의 사건 최소 간격(기획서 §2.6 '첫 3분은 20초', economy.csv에는 없음) */
+  X_eventGapFirstSec: 20,
+  X_eventFirstWindowSec: 180,
+  /** X-20 사건 보상의 초당 수입 하한(초반 수입 0일 때): 도시 tap_base */
+  X_eventRewardFloorTapBase: true,
 };
 export type Assumptions = typeof A;

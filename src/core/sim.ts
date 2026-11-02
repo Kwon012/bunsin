@@ -7,6 +7,7 @@ import { earn } from './ledger';
 import { checkUnit, hire, buyCert, tap } from './actions';
 import { recommend, wallInfo } from './recommend';
 import type { GameEvent, GameState } from './state';
+import { checkUniques } from './uniques';
 
 const IDLE_ALLOW_SEC = 15; // 무반응 지표 허용 시간(기획서 §8.1의 15~45초 중 최솟값)
 
@@ -72,5 +73,7 @@ export function advance(s: GameState, dt: number, out: GameEvent[] = []) {
   if (w.wall) s.metrics.wallSec += dt;
   if (w.dead) { s.metrics.deadWallSec += dt; s.metrics.curDeadWall += dt; s.metrics.longestDeadWall = Math.max(s.metrics.longestDeadWall, s.metrics.curDeadWall); }
   else s.metrics.curDeadWall = 0;
+  d.sinceClosing += dt;
   checkUnit(s, out);
+  checkUniques(s, out);
 }

@@ -12,6 +12,12 @@ import { ClonesPanel, ShopPanel } from '../ui/panels';
 import { introFlow, revealFlow, paydayFlow, teamFlow, certFlow, unlockFlow, drawFinger, settlementFlow, type UiCtx } from '../ui/flows';
 import { sound } from '../fx/sound';
 import { DebugPanel } from '../debug/debug';
+import { shouldSpawnEvent, pickEvent, markEventShown, missEvent, shouldNews, nextNews } from '../core/director';
+import { A } from '../core/assumptions';
+import { cityJobs } from '../core/econ';
+import { eventCardFlow, buildingCard, uniqueCard, sceneCard, clonesExtra } from '../ui/m4';
+import { photoCard } from '../ui/flows';
+import type { EventCard } from '../data/content';
 import type { GameEvent } from '../core/state';
 import type { HomeScene } from './HomeScene';
 import type { VillageScene } from './VillageScene';
@@ -31,6 +37,10 @@ export class UIScene extends Phaser.Scene implements UiCtx {
   private toasts: Phaser.GameObjects.Text[] = [];
   private refreshT = 0;
   private hiddenTaps: number[] = [];
+  private pendingEvent: { e: EventCard; left: number } | null = null;
+  private villageBar!: Phaser.GameObjects.Container;
+  private newsText!: Phaser.GameObjects.Text;
+  private jumpBar!: Phaser.GameObjects.Container;
 
   constructor() { super('UI'); }
   get sc(): Phaser.Scene { return this; }
@@ -61,6 +71,17 @@ export class UIScene extends Phaser.Scene implements UiCtx {
     });
     txt(this, W - 4, 598, `build ${__BUILD_ID__}`, 8, '#5c6080').setOrigin(1, 1).setDepth(802);
     this.bindEvents();
+    this.buildVillageBar();
+    this.clonesPanel.extraSections.push(clonesExtra(this));
+    const openEvent = () => {
+      const pe = this.pendingEvent; if (!pe) return;
+      this.pendingEvent = null; G.bus.emit('event_bubble_end');
+      this.queue.push((d) => eventCardFlow(this, pe.e, d), 'event');
+    };
+    this.home().onBubbleTap = openEvent;
+    this.village().onBubbleTap = openEvent;
+    this.village().onBuildingTap = (j) => this.queue.push((d) => buildingCard(this, j.id, d), 'bcard');
+    this.village().onSceneTap = (id) => this.queue.push((d) => sceneCard(this, id, d), 'scene');
     // 사운드 끄기
     const snd = button(this, W - 22, 88, 34, 22, G.s.settings.sound ? '🔊' : '🔇', () => {
       G.s.settings.sound = !G.s.settings.sound; sound.enabled = G.s.settings.sound; snd.setLabel(G.s.settings.sound ? '🔊' : '🔇');
@@ -82,6 +103,7 @@ export class UIScene extends Phaser.Scene implements UiCtx {
     on('unit', (e) => { if (e.t !== 'unit') return; const u = UNITS[e.index]; if (u) this.toast(`새 단위! ${lineText('unit', u.name) ?? u.name}`, C.gold); });
     on('fever_end', (e) => e.t === 'fever_end' && this.toast(`피버 끝! 이번 콤보 ${e.combo} · 오늘 최고 콤보 ${Math.max(G.s.bestCombo, e.combo)}`));
     G.bus.on('resumed', () => { if (G.s.pendingOffline && !this.queue.has('settle')) this.queue.push((d) => settlementFlow(this, d), 'settle', true); });
+    on('unique', (e) => e.t === 'unique' && this.queue.push((d) => uniqueCard(this, e.id, d), 'unique'));
     on('crown', (e) => e.t === 'crown' && this.toast(`👑 ${e.total}번째 분신! 왕관 쓴 기념 분신`, C.gold));
   }
 
@@ -113,6 +135,7 @@ export class UIScene extends Phaser.Scene implements UiCtx {
     for (const [k, b] of Object.entries(this.tabBtns)) b.bg.setFillStyle(k === t ? 0x3a86ff : 0x2a2d3e);
     this.tabBtns.village.setAlpha(G.s.flags.villageRevealed ? 1 : 0.4);
     this.hud.gaugeBox.setVisible(t === 'home');
+    this.villageBar.setVisible(t === 'village');
     this.sheet.root.setVisible(t === 'home' || t === 'village');
   }
 
@@ -126,8 +149,51 @@ export class UIScene extends Phaser.Scene implements UiCtx {
       this.tabBtns.village.setAlpha(G.s.flags.villageRevealed ? 1 : 0.4);
       if (this.clonesPanel.visible) this.clonesPanel.render();
       this.debug.refresh();
+      this.directorTick(0.2 * (delta > 0 ? 1 : 1) * G.speed);
     }
     this.updateFinger();
+  }
+
+  /** 사건 말풍선 등장/놓침, 마을 뉴스 */
+  private directorTick(dt: number) {
+    const s = G.s;
+    if (this.pendingEvent) {
+      this.pendingEvent.left -= dt;
+      if (this.pendingEvent.left <= 0) { missEvent(s); this.pendingEvent = null; G.bus.emit('event_bubble_end'); }
+    } else if (s.flags.introDone && !this.queue.busy && shouldSpawnEvent(s, false)) {
+      const e = pickEvent(s);
+      if (e) { markEventShown(s, e.id); this.pendingEvent = { e, left: A.X_eventBubbleLifeSec }; G.bus.emit('event_bubble', e); }
+    }
+    if (shouldNews(s)) {
+      const t = nextNews(s);
+      this.newsText.setText(`📰 ${t}`);
+      if (this.tab === 'village') this.tweens.add({ targets: this.newsText, alpha: { from: 0, to: 1 }, duration: 400 });
+    }
+  }
+
+  /** 마을 상단: 뉴스 한 줄 + 사진 모드, 오른쪽 구역 점프 바 */
+  private buildVillageBar() {
+    this.villageBar = this.add.container(0, 0).setDepth(590).setVisible(false);
+    const bg = this.add.rectangle(W / 2, 84, W, 22, 0x000000, 0.55);
+    this.newsText = txt(this, 8, 84, `📰 ${G.s.director.news[G.s.director.news.length - 1] ?? '마을 뉴스가 곧 도착합니다'}`, 10, '#fff').setOrigin(0, 0.5);
+    this.newsText.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+      this.queue.push((d) => photoCard(this, this.newsText.text, 'news', d), 'newsshare');
+    });
+    const cam = button(this, W - 60, 108, 44, 22, '📷', () => this.queue.push((d) => photoCard(this, `사진 모드: ${G.s.totalHired}명의 마을`, 'photo', d), 'photo'), 0x2a2d3e, 12);
+    this.jumpBar = this.add.container(0, 0);
+    this.villageBar.add([bg, this.newsText, cam, this.jumpBar]);
+    this.rebuildJumpBar();
+    G.bus.on('move', () => this.rebuildJumpBar());
+  }
+  private rebuildJumpBar() {
+    this.jumpBar.removeAll(true);
+    const jobs = cityJobs(G.s);
+    jobs.slice().reverse().forEach((j, i) => {
+      const b = button(this, W - 16, 140 + i * 34, 26, 28, String(j.slot), () => this.village().scrollTo(this.village().zoneY(j.slot)), 0x2a2d3e, 10);
+      this.jumpBar.add(b);
+    });
+    const top = button(this, W - 16, 140 + jobs.length * 34, 26, 28, '🚚', () => this.village().scrollTo(0), 0x2a2d3e, 10);
+    this.jumpBar.add(top);
   }
 
   /** 손가락 가이드 1개: 첫 분신 전 본체 → 처음 몇 번은 추천 고용 버튼 */

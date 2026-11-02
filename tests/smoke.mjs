@@ -26,6 +26,16 @@ const press = (label) => p.evaluate((label) => {
   const b = all.reverse().find((o) => o.label && o.label.text === label && o.visible !== false);
   if (b) b.emit('pointerdown'); return !!b;
 }, label);
+const drain = async () => { for (let i = 0; i < 40; i++) {
+  const left = await p.evaluate(() => {
+    const ui = window.__bunsin.game.scene.getScene('UI'); if (!ui.queue.length) return 0;
+    const cards = ui.children.list.filter((o) => o.depth >= 1000 && o.depth < 2000 && o.list);
+    const card = cards[cards.length - 1]; if (!card) return ui.queue.length;
+    const all = []; const walk = (o) => { all.push(o); (o.list || []).forEach(walk); }; walk(card);
+    const btns = all.filter((o) => o.label && o.bg); const pick = btns.find((b) => /받기|좋아|확인|닫기|저장됨/.test(b.label.text)) || btns[0];
+    if (pick) pick.emit('pointerdown'); else card.list[0].emit('pointerdown');
+    return ui.queue.length; });
+  if (!left) return; await p.waitForTimeout(450); } };
 const step = async (name) => { const st = await state(); console.log(name, JSON.stringify(st)); if (shotDir) await p.screenshot({ path: `${shotDir}/${name}.png` }); };
 await step('boot');
 for (let i = 0; i < 3; i++) { await click(180, 320); await p.waitForTimeout(400); }
@@ -72,6 +82,7 @@ await p.evaluate(() => { window.__bunsin.G.s.money = 1e9; });
 await p.waitForTimeout(400);
 const certOk = await p.evaluate(() => { const ui = window.__bunsin.game.scene.getScene('UI'); const all = []; const walk = (o) => { all.push(o); (o.list || []).forEach(walk); }; ui.children.list.forEach(walk); return all.filter((o) => o.label && o.label.text && o.label.text.startsWith('자격증')).length; });
 console.log('cert buttons', certOk);
+await drain();
 await press('▼ 접기'); await p.waitForTimeout(300);
 for (let i = 0; i < 32; i++) { await click(180, 300); await p.waitForTimeout(40); }
 await p.waitForTimeout(500);
@@ -79,6 +90,35 @@ console.log('fever', await p.evaluate(() => window.__bunsin.G.s.feverLeft > 0));
 await step('fever');
 await p.waitForTimeout(16000);
 await step('after_fever');
+await drain();
+// M4: 사건 말풍선 → 카드, 건물 카드, 개성 분신, 분신 탭, 숨은 장면, 앨범
+await p.evaluate(() => { const s = window.__bunsin.G.s; s.director.sinceHappening = 30; s.director.sinceEvent = 60; });
+await p.waitForTimeout(600);
+const ev = await p.evaluate(() => { const ui = window.__bunsin.game.scene.getScene('UI'); const pe = ui.pendingEvent; if (pe) ui.home().onBubbleTap(); return pe ? pe.e.id : null; });
+console.log('event', ev);
+await p.waitForTimeout(500);
+await step('event_card');
+const evBtn = await p.evaluate(() => { const ui = window.__bunsin.game.scene.getScene('UI'); const all = []; const walk = (o) => { all.push(o); (o.list || []).forEach(walk); }; ui.children.list.forEach(walk); const b = all.reverse().find((o) => o.label && o.bg && o.parentContainer && o.parentContainer.depth === 1000); if (b) { b.emit('pointerdown'); return b.label.text; } return null; });
+console.log('event choice', evBtn, await p.evaluate(() => window.__bunsin.G.s.metrics.income.event));
+await p.waitForTimeout(600);
+await drain();
+await p.evaluate(() => { const ui = window.__bunsin.game.scene.getScene('UI'); ui.switchTab('village'); });
+await p.waitForTimeout(500);
+await p.evaluate(() => { const ui = window.__bunsin.game.scene.getScene('UI'); const v = ui.village(); v.onBuildingTap(v.buildings[0].j); });
+await p.waitForTimeout(500);
+await step('building_card');
+await press('닫기'); await p.waitForTimeout(400);
+await p.evaluate(() => { const v = window.__bunsin.game.scene.getScene('Village'); v.onSceneTap('sc_cat'); });
+await p.waitForTimeout(1200);
+await step('scene');
+await press('앨범에 저장됨'); await p.waitForTimeout(400);
+await p.evaluate(() => { window.__bunsin.game.scene.getScene('UI').switchTab('clones'); });
+await p.waitForTimeout(500);
+await step('clones_tab');
+await press('📷 추억 앨범 (' + (await p.evaluate(() => JSON.parse(localStorage.getItem('bunsin_album_v1') || '[]').length)) + '/30)');
+await p.waitForTimeout(800);
+await step('album');
+await press('닫기');
 console.log('ERRORS', errs.length ? errs.slice(0, 5).join('\n---\n') : 'none');
 await b.close();
 process.exit(errs.length ? 1 : 0);

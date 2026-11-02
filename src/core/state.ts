@@ -75,10 +75,11 @@ export interface GameState {
   cityHistory: { cityIdx: number; clones: number; earned: number; fame: number }[];
   pendingOffline: OfflineReport | null;
   // 사건·뉴스 연출 상태
-  director: { sinceHappening: number; sinceEvent: number; sinceNews: number; seen: Record<string, number>; series: Record<string, string>; newsIdx: number; lastLines: string[] };
+  director: { sinceHappening: number; sinceEvent: number; sinceNews: number; seen: Record<string, number>; series: Record<string, string>; newsIdx: number; lastLines: string[]; news: string[]; recent: string[]; sinceClosing: number };
   lastSeen: number;
   metrics: Metrics;
   settings: { sound: boolean; bigText: boolean };
+  createdAt: number;
 }
 
 export const SAVE_VERSION = 1;
@@ -99,8 +100,8 @@ export function newGame(paydayFirstSec: number, now = Date.now()): GameState {
     uniques: [], uniqueHintAt: {},
     goal: null, flags: {}, teamSeen: {}, maxUnitSeen: -1, totalHired: 0,
     stamp: { lastDay: '', days: 0 }, scenesFound: {}, cityHistory: [], pendingOffline: null,
-    director: { sinceHappening: 0, sinceEvent: 0, sinceNews: 0, seen: {}, series: {}, newsIdx: 0, lastLines: [] },
-    lastSeen: now, metrics: newMetrics(), settings: { sound: true, bigText: false },
+    director: { sinceHappening: 0, sinceEvent: 0, sinceNews: 0, seen: {}, series: {}, newsIdx: 0, lastLines: [], news: [], recent: [], sinceClosing: 0 },
+    lastSeen: now, metrics: newMetrics(), settings: { sound: true, bigText: false }, createdAt: now,
   };
 }
 
