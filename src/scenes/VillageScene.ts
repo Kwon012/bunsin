@@ -59,6 +59,7 @@ export class VillageScene extends Phaser.Scene {
     on('move', () => { this.cy = 0; this.build(); });
     on('top_hired', () => this.build());
     on('unique', () => this.build());
+    on('fever_start', () => this.chant());
     G.bus.on('event_bubble', this.showBubble, this);
     G.bus.on('event_bubble_end', this.hideBubble, this);
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this.handlers.forEach(([k, f]) => G.bus.off(k, f)));
@@ -207,6 +208,18 @@ export class VillageScene extends Phaser.Scene {
     this.tweens.addCounter({ from: R * 3, to: R, duration: 1800, delay: 300, ease: 'Cubic.easeInOut',
       onUpdate: (tw) => { cam.setZoom(tw.getValue() ?? R); this.scrollTo(Phaser.Math.Linear(first.y, this.worldH * 0.62, tw.progress)); },
       onComplete: () => { this.time.delayedCall(900, () => { runners.forEach((r) => r.destroy()); this.refresh(); done(); }); } });
+  }
+
+  /** 피버: 마을 분신들이 구호를 따라 외침 */
+  chant() {
+    const dots = this.buildings.flatMap((b) => b.dots);
+    for (let i = 0; i < Math.min(6, dots.length); i++) {
+      const d = dots[Math.floor(Math.random() * dots.length)];
+      const t = txt(this, d.x, d.y - 8, ['화이팅!', '힘내자!', '본체 최고!'][i % 3], 9, '#ff006e', { fontStyle: 'bold', backgroundColor: '#ffffffcc', padding: { x: 2, y: 1 } }).setOrigin(0.5, 1);
+      this.layer.add(t);
+      this.tweens.add({ targets: t, y: t.y - 14, alpha: 0, duration: 1600, delay: i * 120, onComplete: () => t.destroy() });
+    }
+    this.buildings.forEach((b) => b.dots.forEach((d) => this.tweens.add({ targets: d, y: d.y - 5, duration: 150, yoyo: true, repeat: 5 })));
   }
 
   setTimeOfDay(t: TimeOfDay | null) { this.todOverride = t; this.applyTod(); }

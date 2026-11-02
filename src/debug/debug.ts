@@ -84,6 +84,7 @@ export class DebugPanel {
       `무반응 ${pct(m.idleRatio)} · 벽 노출 ${pct(m.wallExposure)} · 막다른 벽 ${pct(m.deadWallRatio)} (최장 ${formatSec(m.longestDeadWallSec)})`,
       `사건 ${m.eventsShown}회 · 놓침 ${pct(m.eventMissRatio)} · 마무리 카드 ${m.closingCards} · 배당 비중 ${pct(m.dividendShare)}`,
       `페이싱: ${pace || '-'}`,
+      `직종별 수입 비중: ${Object.entries(m.jobShare).map(([k, v]) => `${k} ${(v * 100).toFixed(0)}%`).join(' · ')}${Object.values(m.jobShare).some((v) => v >= 0.9) ? ' ⚠️90%↑' : ''}`,
     ].join('\n'));
   }
 }
