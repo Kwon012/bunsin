@@ -1,0 +1,136 @@
+{
+ "cities": {
+  "1": {
+   "firstCost": 200000,
+   "firstInc": 10320,
+   "tapBase": 10000,
+   "costStep": 20,
+   "incStep": 2,
+   "growth": [
+    1.12,
+    1.12,
+    1.12,
+    1.12,
+    1.12
+   ],
+   "cap": 50,
+   "costAdj": [
+    1,
+    1,
+    0.5,
+    0.5,
+    3
+   ]
+  },
+  "2": {
+   "firstCostMul": 3,
+   "firstPayback": 20,
+   "incStep": 2,
+   "growth": [
+    1.12,
+    1.12,
+    1.12,
+    1.12,
+    1.12,
+    1.12
+   ],
+   "cap": 60
+  }
+ },
+ "template": {
+  "costStepGrowth": 0.04,
+  "capPerCity": 10,
+  "paybackGrowth": 0.1,
+  "topPaybackGrowth": 0.95
+ },
+ "unlockPct": 0.4,
+ "unlockSlot8": 10,
+ "paydayShare": {
+  "alba": 0.1,
+  "job": 1.0,
+  "biz": 0.5,
+  "inv": 0.3
+ },
+ "fameUnitPerFirstCost": 25000,
+ "assetMul": 400,
+ "assetIncomeMult": 1.25,
+ "assetNames": {
+  "1": [
+   "편의점",
+   "배달 가게",
+   "대형 카페",
+   "중소기업 건물",
+   "분식집 본점 건물"
+  ]
+ },
+ "houseNames": {
+  "1": [
+   "반지하 원룸",
+   "신축 오피스텔",
+   "동네 아파트"
+  ],
+  "2": [
+   "해운대 원룸",
+   "광안리 오션뷰 아파트",
+   "해운대 펜트하우스"
+  ]
+ },
+ "housePrice": {
+  "1": [
+   0,
+   250000000,
+   900000000
+  ]
+ },
+ "houseMul": [
+  0,
+  30,
+  3
+ ],
+ "houseFame": 4,
+ "furniture": [
+  [
+   "침대",
+   "식탁",
+   "조명",
+   "냉장고"
+  ],
+  [
+   "소파",
+   "TV",
+   "책상",
+   "커튼"
+  ],
+  [
+   "안마의자",
+   "대형 TV",
+   "서재",
+   "홈바"
+  ]
+ ],
+ "furnBase": {
+  "1": [
+   500000,
+   100000000,
+   1000000000
+  ]
+ },
+ "furnBaseMul": [
+  10,
+  0.025,
+  0.04
+ ],
+ "furnMaxLevel": 3,
+ "furnGrowth": 4,
+ "furnFame": 1,
+ "assetPrice": {
+  "1": [
+   72700000,
+   200000000,
+   800000000,
+   4000000000,
+   20000000000
+  ]
+ },
+ "topPaybackMul": 1.5
+}

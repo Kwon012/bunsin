@@ -12,7 +12,7 @@ export const A = {
   /** A5 통장 자동 적립: 초당 수입의 auto_save_ratio를 현금에서 떼어 지금 종목에. 한도 도달 시 중단 */
   A5_autoSaveFromCash: true,
   /** A6 자격증: 인원 N 이상이면 열림. 가격 = base_cost × growth^(N + offset) × cert_price_mult */
-  A6_certExpOffset: 10,
+  A6_certExpOffset: 0, // v0.3: 10→0(정원 도입으로 정원 밖 인원 가격이 되지 않게)
   /** A7 추천: 비용 ÷ 수입 증가량 최소. ETA = (비용 − 현금) ÷ 초당 수입. 벽 = ETA ≥ move_recommend_eta_sec */
   A7_recommendByRatio: true,
   /** A8 목표 바: 90초 이내 ETA 중 가장 가까운 목표(없으면 최단 ETA). 15% 채워 시작(표시용) */

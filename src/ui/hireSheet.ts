@@ -155,7 +155,7 @@ export class HireSheet {
         this.recName.setText(`추천: ${j.name} 자격증 ×3`);
       }
       const eta = etaFor(s, cost);
-      const t = nextTeam(owned(s, j.id));
+      const t = nextTeam(j, owned(s, j.id));
       this.recSub.setText(eta > 0 ? `${formatSec(eta)} 뒤 가능` : t ? `팀 보너스까지 ${t - owned(s, j.id)}명` : '지금 고용 가능!');
       this.recBtn.setLabel(label).setEnabled(cost <= s.money);
       return;
@@ -166,7 +166,7 @@ export class HireSheet {
       const q = hireQuote(s, r.j.id, this.amount);
       const n = this.amount === 'max' ? q.n : (this.amount as number);
       const cost = this.amount === 'max' ? (q.n > 0 ? q.cost : hireCostN(r.j, k, 1)) : q.cost;
-      const t = nextTeam(k);
+      const t = nextTeam(r.j, k);
       r.name.setText(`${r.j.name} · ${k}명`);
       r.sub.setText(`초당 ${formatKR(jobIncomeBase(s, r.j) * fm)}${t ? ` · 팀까지 ${t - k}명` : ''}`);
       r.hireB.setLabel(`고용 ×${Math.max(1, n)}\n${formatKR(cost)}`).setEnabled(cost <= s.money && (this.amount !== 'max' || q.n > 0));

@@ -1,0 +1,9 @@
+﻿city,id,name,theme,slots,move_slot,move_count,first_cost,first_income,settle_first_clones,settle_money,fame_unit,tap_base,stock_id,stock_name_placeholder,top_building
+1,home,우리 동네,생계·골목 장사,5,5,1,200000,10320,0,0,5000000000,10000,stock_home,우리 동네 종목,언덕 위 분식집 본점
+2,busan,부산,바다·관광·개발,6,6,1,288000000000,14400000000,3,950400000000,7.20E+15,14400000000,stock_busan,부산 종목,해운대 101층 타워(패러디)
+3,yeouido,여의도,금융,7,7,1,1.21E+18,5.48E+16,3,3.98E+18,3.01E+22,5.48E+16,stock_yeouido,여의도 종목,여의도 마천루
+4,tokyo,도쿄,콘텐츠·캐릭터 IP,8,8,1,8.72E+24,3.63E+23,3,2.88E+25,2.18E+29,3.63E+23,stock_tokyo,도쿄 종목,도쿄 타워(패러디)
+5,shanghai,상하이,제조·무역,8,8,1,1.10E+32,4.22E+30,3,3.62E+32,2.74E+36,4.22E+30,stock_shanghai,상하이 종목,와이탄 스카이라인
+6,dubai,두바이,초대형 개발·오일,8,8,1,1.21E+39,4.33E+37,3,4.00E+39,3.03E+43,4.33E+37,stock_dubai,두바이 종목,사막 초고층(패러디)
+7,svalley,실리콘밸리,테크·AI,8,8,1,1.18E+46,3.94E+44,3,3.90E+46,2.95E+50,3.94E+44,stock_svalley,실리콘밸리 종목,우주선 모양 캠퍼스(패러디)
+8,newyork,뉴욕,월가·세계 경영,8,8,1,1.02E+53,3.19E+51,3,3.37E+53,2.55E+57,3.19E+51,stock_newyork,뉴욕 종목,맨해튼 펜트하우스

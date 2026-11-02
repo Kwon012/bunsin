@@ -64,6 +64,11 @@ export interface GameState {
   // 개성 분신
   uniques: UniqueOwned[];
   uniqueHintAt: Record<string, number>;
+  // 자산·집(v0.3)
+  assets: string[];
+  home: { houseId: string; levels: Record<string, number>; bought: string[]; fame: number };
+  teamPhotos: Record<string, number>;
+  firstHired: Record<string, number>;
   // 진행
   goal: Goal | null;
   flags: Record<string, number>;
@@ -82,7 +87,7 @@ export interface GameState {
   createdAt: number;
 }
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 3; // v0.3 경제로 바뀌어 이전 세이브는 새로 시작
 
 export function newMetrics(): Metrics {
   return { firstAt: {}, idleSec: 0, wallSec: 0, deadWallSec: 0, longestDeadWall: 0, curDeadWall: 0,
@@ -98,6 +103,7 @@ export function newGame(paydayFirstSec: number, now = Date.now()): GameState {
     managerUnlocked: false, managerOn: true, managerTimer: 1,
     account: { open: false, autoSave: true, current: null, held: [] },
     uniques: [], uniqueHintAt: {},
+    assets: [], home: { houseId: 'h1_1', levels: {}, bought: [], fame: 0 }, teamPhotos: {}, firstHired: {},
     goal: null, flags: {}, teamSeen: {}, maxUnitSeen: -1, totalHired: 0,
     stamp: { lastDay: '', days: 0 }, scenesFound: {}, cityHistory: [], pendingOffline: null,
     director: { sinceHappening: 0, sinceEvent: 0, sinceNews: 0, seen: {}, series: {}, newsIdx: 0, lastLines: [], news: [], recent: [], sinceClosing: 0 },
@@ -108,6 +114,11 @@ export function newGame(paydayFirstSec: number, now = Date.now()): GameState {
 /** 이벤트(연출 트리거). core가 만들고 화면이 소비한다. */
 export type GameEvent =
   | { t: 'hire'; jobId: string; n: number }
+  | { t: 'first_job'; jobId: string }
+  | { t: 'asset'; id: string }
+  | { t: 'furniture'; id: string; level: number }
+  | { t: 'house'; id: string }
+  | { t: 'cap_full'; jobId: string }
   | { t: 'team'; jobId: string; count: number }
   | { t: 'unlock'; jobId: string }
   | { t: 'crown'; total: number }

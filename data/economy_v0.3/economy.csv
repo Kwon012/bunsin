@@ -1,0 +1,27 @@
+﻿key,value,unit,note
+tap_income_ratio,0.12,비율,탭 1회 = 도시 tap_base + 초당 수입 × 이 값
+fever_mult,3,배,응원 피버 중 분신 전원 수입 배수
+fever_duration_sec,15,초,응원 피버 지속 시간
+payday_first_sec,180,초,"첫 월급날(v0.3: 240→180, 튜토리얼에서 미리 알림)"
+payday_interval_sec,300,초,"월급날 주기(v0.3: 1800→300, 사용자 피드백 c)"
+payday_min_income_sec,180,초,"월급날 최소액 = 초당 수입 × 이 값(v0.3: 120→180, 주기의 60%)"
+offline_payday_floor_ratio,0.25,비율,"오프라인 월급날 최소액 배율(v0.3 신설: 주기가 짧아져 봉투가 오프라인 수입을 압도하지 않게)"
+offline_cap_sec,28800,초,오프라인 정산 상한(이후에도 아래 비율로 계속)
+offline_after_cap_ratio,0.25,비율,상한 이후 오프라인 수입 속도
+manager_unlock_paydays,16,회,"접속 중 월급날 N회째 매니저 해금(v0.3: 4→16, 주기 단축에도 약 80분 유지)"
+cert_price_mult,1.5,배,"자격증 가격 = (해당 인원)명째 고용가 × 이 값(v0.3: 4→1.5, 인원+10→인원, 자격증이 벽이 되지 않고 열리면 바로 사는 보상이 되게)"
+team_bonus_additive,1,-,"1 = 팀 보너스 합연산(1 + Σ(배수−1)). v0.3: 단계당 +20%, 정원 가득 = ×2"
+cert_level_absolute,1,-,"1 = 자격증 배수는 '가진 최고 단계의 값'(OECD 교육지표 상대임금)"
+milestone_count_pct,1,-,"1 = milestones.csv count는 직종 정원(max_count)의 %"
+album_bonus_per_photo,0.01,비율,"단체 사진 1장 수집 = 전체 수입 +1%(합연산)"
+album_bonus_cap,0.5,비율,단체 사진 수집 보너스 상한
+move_recommend_eta_sec,180,초,다음 추천 구매까지 이 시간 이상이면 이사 추천
+fame_income_bonus,0.01,비율,"명성 1당 수입 +1%(더하기). v0.3: 집·가구로도 명성을 얻어 0.2→0.01로 단위 조정"
+village_reveal_clones,15,명,마을 공개 시점(분신 수) = 홈 정원
+home_clone_cap,15,명,홈 화면에 동시에 보이는 분신 상한(나머지는 마을로 출퇴근)
+event_idle_sec,12,초,무반응 이 시간 후 사건 말풍선
+event_min_gap_sec,30,초,사건 최소 간격(세션 첫 3분은 20초)
+news_interval_sec,60,초,마을 뉴스 주기
+hidden_scenes_per_city,6,개,도시별 숨은 장면 수
+move_settle_first_clones,3,명치,이사 정착금 ≈ 새 도시 1칸 첫 분신 3명치(cities.csv settle_money)
+slot_unlock_default,25,명,다음 칸 해금 = 이전 칸 이 인원(jobs.csv unlock_prev_count가 우선)

@@ -23,19 +23,19 @@ describe('이사', () => {
   });
   it('초기화: 돈·분신·자격증 / 유지: 명성·매니저·통장·개성 분신 + 정착금', () => {
     const s = fresh(); s.money = 1e30;
-    hire(s, 'home_1', 60); buyCert(s, 'home_1'); hire(s, 'home_2', 25); hire(s, 'home_3', 25); hire(s, 'home_4', 25); hire(s, 'home_5', 1);
+    hire(s, 'home_1', 'max'); buyCert(s, 'home_1'); hire(s, 'home_2', 'max'); hire(s, 'home_3', 'max'); hire(s, 'home_4', 'max'); hire(s, 'home_5', 1);
     s.managerUnlocked = true; openAccount(s); s.account.current!.balance = 500;
     clock.setHour(23); checkUniques(s); clock.setHour(null);
-    s.cityEarned = 25000000 * 49; // fame = floor(√49) = 7
+    s.cityEarned = city(s).fameUnit * 49; // fame = floor(√49) = 7
     expect(fameGainNow(s)).toBe(7);
     const pv = movePreview(s);
-    expect(pv.multAfter).toBeCloseTo(1 + 0.2 * 7, 9);
+    expect(pv.multAfter).toBeCloseTo(1 + 0.01 * 7, 9);
     const uniq = s.uniques.length;
     expect(moveCity(s)).toBe(true);
     expect(s.cityIdx).toBe(1);
     expect(s.owned).toEqual({}); expect(s.certs).toEqual({});
     expect(s.money).toBe(city(s).settleMoney);
-    expect(totalFame(s)).toBe(7); expect(fameMult(s)).toBeCloseTo(2.4, 9);
+    expect(totalFame(s)).toBe(7); expect(fameMult(s)).toBeCloseTo(1.07, 9);
     expect(s.managerUnlocked).toBe(true);
     expect(s.account.held.map((h) => h.stockId)).toEqual(['stock_home']);
     expect(s.account.current!.stockId).toBe('stock_busan');

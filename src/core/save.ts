@@ -3,7 +3,7 @@ import { eco } from './econ';
 import { clock } from './clock';
 import { A } from './assumptions';
 import { collectOffline, simulateOffline } from './offline';
-import { newGame, type GameEvent, type GameState } from './state';
+import { newGame, SAVE_VERSION, type GameEvent, type GameState } from './state';
 
 const KEY = 'bunsin_save_v1';
 let memory: string | null = null;
@@ -22,7 +22,9 @@ function merge<T>(def: T, v: unknown): T {
   return o as T;
 }
 export function deserialize(str: string): GameState {
-  return merge(newGame(eco('payday_first_sec')), JSON.parse(str));
+  const raw = JSON.parse(str);
+  if (!raw || raw.v !== SAVE_VERSION) throw new Error('세이브 버전이 달라 새로 시작');
+  return merge(newGame(eco('payday_first_sec')), raw);
 }
 
 export function saveState(s: GameState) {

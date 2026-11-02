@@ -78,13 +78,13 @@ describe('개성 분신(숨은 조건, 비확률)', () => {
     const s = fresh(); s.owned.home_1 = 1; advance(s, 241);
     expect(hasUnique(s, 'u_payday')).toBe(true);
   });
-  it('팀 보너스 25명 → 단체사진 분신, 분신 100명 → 백 번째 분신', () => {
-    const s = fresh(); s.money = 1e12; s.paydayIn = 1e9;
-    hire(s, 'home_1', 25); checkUniques(s); expect(hasUnique(s, 'u_team')).toBe(true);
-    hire(s, 'home_2', 75); checkUniques(s); expect(hasUnique(s, 'u_hundred')).toBe(true);
+  it('첫 팀 보너스 → 단체사진 분신, 분신 100명 → 백 번째 분신', () => {
+    const s = fresh(); s.money = 1e30; s.paydayIn = 1e9;
+    hire(s, 'home_1', 10); checkUniques(s); expect(hasUnique(s, 'u_team')).toBe(true);
+    hire(s, 'home_1', 'max'); hire(s, 'home_2', 'max'); checkUniques(s); expect(hasUnique(s, 'u_hundred')).toBe(true);
   });
   it('첫 자격증 / 통장 개설 / 출근 도장 3일', () => {
-    const s = fresh(); s.money = 1e12; s.paydayIn = 1e9;
+    const s = fresh(); s.money = 1e30; s.paydayIn = 1e9;
     hire(s, 'home_1', 25); buyCert(s, 'home_1'); checkUniques(s); expect(hasUnique(s, 'u_cert')).toBe(true);
     s.managerUnlocked = true; openAccount(s); checkUniques(s); expect(hasUnique(s, 'u_piggy')).toBe(true);
     s.stamp.days = 3; checkUniques(s); expect(hasUnique(s, 'u_stamp')).toBe(true);

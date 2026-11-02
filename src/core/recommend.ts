@@ -2,9 +2,11 @@
 import { A } from './assumptions';
 import { acc, certMult, cityJobs, eco, hireCost, hireCostN, incomeBase, incomeNow, isUnlocked, jobIncomeBase, nextCert, nextLockedJob, nextTeam, owned, totalClones, unlockNeed, job, D } from './econ';
 import type { Job } from '../data/economy';
+import { capLeft, assetOf, fameMult } from './econ';
+import { canBuyAsset, houseFurniture, currentHouse, furnLevel, furnCost, nextHouse, furnitureDone } from './home';
 import type { GameState, Goal } from './state';
 
-export interface Purchase { kind: 'hire' | 'cert'; jobId: string; cost: number; gain: number; ratio: number }
+export interface Purchase { kind: 'hire' | 'cert' | 'asset' | 'furniture' | 'house'; jobId: string; cost: number; gain: number; ratio: number }
 
 export function purchases(s: GameState): Purchase[] {
   const res: Purchase[] = [];
@@ -12,15 +14,32 @@ export function purchases(s: GameState): Purchase[] {
     if (!isUnlocked(s, j)) continue;
     const k = owned(s, j.id);
     const now = jobIncomeBase(s, j);
-    const cost = hireCost(j, k);
-    const gain = jobIncomeBase(s, j, k + 1) - now;
-    res.push({ kind: 'hire', jobId: j.id, cost, gain, ratio: gain > 0 ? cost / gain : Infinity });
+    if (capLeft(j, k) > 0) {
+      const cost = hireCost(j, k);
+      const gain = jobIncomeBase(s, j, k + 1) - now;
+      res.push({ kind: 'hire', jobId: j.id, cost, gain, ratio: gain > 0 ? cost / gain : Infinity });
+    }
     const c = nextCert(s, j);
     if (c && c.open) {
-      const cg = now * (D.cert[c.level].multiplier - 1);
+      const cg = now * (c.mult / certMult(s, j.id) - 1);
       res.push({ kind: 'cert', jobId: j.id, cost: c.price, gain: cg, ratio: cg > 0 ? c.price / cg : Infinity });
     }
+    const a = assetOf(j.id);
+    if (a && canBuyAsset(s, j.id)) {
+      const ag = now * (a.incomeMult - 1);
+      res.push({ kind: 'asset', jobId: j.id, cost: a.price, gain: ag, ratio: ag > 0 ? a.price / ag : Infinity });
+    }
   }
+  // 집: 명성 1당 수입 증가량으로 환산
+  const perFame = incomeBase(s) * eco('fame_income_bonus') / fameMult(s);
+  for (const f of houseFurniture(currentHouse(s).id)) {
+    const lv = furnLevel(s, f.id);
+    if (lv >= f.maxLevel) continue;
+    const cost = furnCost(f, lv), g = perFame * f.famePerLevel;
+    res.push({ kind: 'furniture', jobId: f.id, cost, gain: g, ratio: g > 0 ? cost / g : Infinity });
+  }
+  const nh = nextHouse(s);
+  if (nh && furnitureDone(s)) { const g = perFame * nh.fame; res.push({ kind: 'house', jobId: nh.id, cost: nh.price, gain: g, ratio: g > 0 ? nh.price / g : Infinity }); }
   return res;
 }
 
@@ -71,10 +90,10 @@ function goalCandidates(s: GameState): Goal[] {
   for (const j of cityJobs(s)) {
     if (!isUnlocked(s, j)) continue;
     const k = owned(s, j.id);
-    const t = nextTeam(k);
+    const t = nextTeam(j, k);
     if (t !== undefined) out.push({ kind: 'team', jobId: j.id, target: t, start: k, label: `${j.name} 팀 보너스` });
     const c = nextCert(s, j);
-    if (c && !c.open) out.push({ kind: 'cert', jobId: j.id, target: c.count, start: k, label: `${j.name} 자격증` });
+    if (c && !c.open && c.count <= (j.maxCount || Infinity)) out.push({ kind: 'cert', jobId: j.id, target: c.count, start: k, label: `${j.name} ${c.label}` });
     if (j.isTop && k === 0) out.push({ kind: 'top', jobId: j.id, target: 1, start: 0, label: `${j.name} 첫 고용(이사)` });
   }
   const lock = nextLockedJob(s);

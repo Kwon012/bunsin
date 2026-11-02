@@ -5,7 +5,7 @@ import { earn, firstAt, happening } from './ledger';
 import type { GameEvent, GameState, PaydayLine, PaydaySlip } from './state';
 
 /** 지난 월급날 이후 직종별로 번 돈(s.sinceJob) 기준 보너스 */
-export function paydayBonus(s: GameState): { lines: PaydayLine[]; bonus: number; floorApplied: boolean } {
+export function paydayBonus(s: GameState, online = true): { lines: PaydayLine[]; bonus: number; floorApplied: boolean } {
   const byLine = new Map<string, PaydayLine>();
   let base = 0;
   for (const j of cityJobs(s)) {
@@ -16,7 +16,7 @@ export function paydayBonus(s: GameState): { lines: PaydayLine[]; bonus: number;
     l.amount += amt;
     byLine.set(j.paydayLine, l);
   }
-  const floor = incomeBase(s) * eco('payday_min_income_sec');
+  const floor = incomeBase(s) * eco('payday_min_income_sec') * (online ? 1 : eco('offline_payday_floor_ratio'));
   const floorApplied = base < floor;
   const um = uniqueMult(s, 'payday');
   const bonus = fin((floorApplied ? floor : base) * um);
@@ -27,7 +27,7 @@ export function paydayBonus(s: GameState): { lines: PaydayLine[]; bonus: number;
 
 /** 월급날 처리. online=false면 보너스는 밀린 월급봉투로, 배당 현금은 돌려준다(정산서에서 지급) */
 export function doPayday(s: GameState, out: GameEvent[], online: boolean, divRatio = 1): PaydaySlip {
-  const { lines, bonus, floorApplied } = paydayBonus(s);
+  const { lines, bonus, floorApplied } = paydayBonus(s, online);
   s.sinceJob = {};
   s.paydayCount++;
   if (online) s.onlinePaydays++;

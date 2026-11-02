@@ -4,7 +4,8 @@ import { cityJobs, feverMult, jobIncomeBase } from './econ';
 import { autoSaveAmount } from './account';
 import { doPayday, paydayInterval } from './payday';
 import { earn } from './ledger';
-import { checkUnit, hire, buyCert, tap } from './actions';
+import { checkUnit, tap } from './actions';
+import { executePurchase } from './purchase';
 import { recommend, wallInfo } from './recommend';
 import type { GameEvent, GameState } from './state';
 import { checkUniques } from './uniques';
@@ -29,10 +30,7 @@ function accrue(s: GameState, seg: number) {
 export function managerAct(s: GameState, out: GameEvent[]) {
   for (let i = 0; i < A.X_managerTapsPerSec; i++) tap(s, out, true);
   const r = recommend(s);
-  if (r && r.cost <= s.money) {
-    if (r.kind === 'hire') hire(s, r.jobId, 1, out);
-    else buyCert(s, r.jobId, out);
-  }
+  if (r && r.cost <= s.money) executePurchase(s, r, out);
 }
 
 /** 접속 중 dt초 진행 */

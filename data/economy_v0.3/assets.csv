@@ -1,0 +1,59 @@
+﻿city,id,job_id,name,price,income_mult
+1,as_home_1,home_1,편의점,72700000,1.25
+1,as_home_2,home_2,배달 가게,200000000,1.25
+1,as_home_3,home_3,대형 카페,800000000,1.25
+1,as_home_4,home_4,중소기업 건물,4000000000,1.25
+1,as_home_5,home_5,분식집 본점 건물,20000000000,1.25
+2,as_busan_1,busan_1,자갈치시장 건물,115200000000000,1.25
+2,as_busan_2,busan_2,해수욕장 파라솔 대여 건물,2.93E+15,1.25
+2,as_busan_3,busan_3,돼지국밥집 건물,6.61E+16,1.25
+2,as_busan_4,busan_4,항만 물류 건물,1.40E+18,1.25
+2,as_busan_5,busan_5,게스트하우스 건물,2.85E+19,1.25
+2,as_busan_6,busan_6,해운대 개발 시행사 건물,5.63E+20,1.25
+3,as_yeouido_1,yeouido_1,직장인 도시락 배달 건물,4.82E+20,1.25
+3,as_yeouido_2,yeouido_2,서류 퀵 배달원(늘찬배달원) 건물,8.38E+21,1.25
+3,as_yeouido_3,yeouido_3,증권사 리서치 보조 건물,1.29E+23,1.25
+3,as_yeouido_4,yeouido_4,증권사 애널리스트 건물,1.87E+24,1.25
+3,as_yeouido_5,yeouido_5,투자자문사 건물,2.60E+25,1.25
+3,as_yeouido_6,yeouido_6,자산운용사 건물,3.51E+26,1.25
+3,as_yeouido_7,yeouido_7,증권사 건물,4.65E+27,1.25
+4,as_tokyo_1,tokyo_1,콘비니 건물,3.49E+27,1.25
+4,as_tokyo_2,tokyo_2,이자카야 건물,4.62E+28,1.25
+4,as_tokyo_3,tokyo_3,라멘 가게 건물,5.44E+29,1.25
+4,as_tokyo_4,tokyo_4,애니메이션 원화가 건물,6.01E+30,1.25
+4,as_tokyo_5,tokyo_5,캐릭터 굿즈숍 건물,6.37E+31,1.25
+4,as_tokyo_6,tokyo_6,애니 제작사 건물,6.56E+32,1.25
+4,as_tokyo_7,tokyo_7,캐릭터 IP 로열티 건물,6.63E+33,1.25
+4,as_tokyo_8,tokyo_8,롯폰기 펜트하우스 건물,6.59E+34,1.25
+5,as_shanghai_1,shanghai_1,훠궈집 건물,4.39E+34,1.25
+5,as_shanghai_2,shanghai_2,와이탄 야경 가이드 건물,5.71E+35,1.25
+5,as_shanghai_3,shanghai_3,공장 라인 건물,6.60E+36,1.25
+5,as_shanghai_4,shanghai_4,무역회사 건물,7.15E+37,1.25
+5,as_shanghai_5,shanghai_5,온라인 셀러 건물,7.44E+38,1.25
+5,as_shanghai_6,shanghai_6,제조 공장 건물,7.53E+39,1.25
+5,as_shanghai_7,shanghai_7,컨테이너선 선주 건물,7.46E+40,1.25
+5,as_shanghai_8,shanghai_8,무역 그룹 건물,7.27E+41,1.25
+6,as_dubai_1,dubai_1,사막 사파리 가이드 건물,4.85E+41,1.25
+6,as_dubai_2,dubai_2,호텔 컨시어지 건물,6.19E+42,1.25
+6,as_dubai_3,dubai_3,슈퍼카 세차 건물,7.03E+43,1.25
+6,as_dubai_4,dubai_4,마천루 현장 소장 건물,7.49E+44,1.25
+6,as_dubai_5,dubai_5,슈퍼카 렌털 건물,7.65E+45,1.25
+6,as_dubai_6,dubai_6,7성 호텔 건물,7.60E+46,1.25
+6,as_dubai_7,dubai_7,오일 로열티 수령인 건물,7.40E+47,1.25
+6,as_dubai_8,dubai_8,인공섬 개발 건물,7.08E+48,1.25
+7,as_svalley_1,svalley_1,긱 배달 건물,4.72E+48,1.25
+7,as_svalley_2,svalley_2,AI 데이터 라벨러 건물,5.93E+49,1.25
+7,as_svalley_3,svalley_3,테크 캠퍼스 셔틀 기사 건물,6.62E+50,1.25
+7,as_svalley_4,svalley_4,AI 엔지니어 건물,6.93E+51,1.25
+7,as_svalley_5,svalley_5,차고 창업자 건물,6.96E+52,1.25
+7,as_svalley_6,svalley_6,유니콘 CEO 건물,6.79E+53,1.25
+7,as_svalley_7,svalley_7,엔젤 투자자 건물,6.50E+54,1.25
+7,as_svalley_8,svalley_8,빅테크 대주주 건물,6.12E+55,1.25
+8,as_newyork_1,newyork_1,핫도그 노점 건물,4.08E+55,1.25
+8,as_newyork_2,newyork_2,도그 워커 건물,5.04E+56,1.25
+8,as_newyork_3,newyork_3,브로드웨이 티켓 판매 건물,5.53E+57,1.25
+8,as_newyork_4,newyork_4,월가 트레이더 건물,5.69E+58,1.25
+8,as_newyork_5,newyork_5,브로드웨이 제작자 건물,5.62E+59,1.25
+8,as_newyork_6,newyork_6,글로벌 브랜드 창업자 건물,5.40E+60,1.25
+8,as_newyork_7,newyork_7,맨해튼 빌딩 소유주 건물,5.08E+61,1.25
+8,as_newyork_8,newyork_8,다국적 기업 회장 겸 CEO 건물,4.71E+62,1.25

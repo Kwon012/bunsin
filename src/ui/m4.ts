@@ -41,7 +41,7 @@ export function eventCardFlow(ctx: UiCtx, e: EventCard, done: () => void) {
 
 export function buildingCard(ctx: UiCtx, jobId: string, done: () => void) {
   const s = G.s; const j = job(jobId);
-  const k = owned(s, jobId); const t = nextTeam(k);
+  const k = owned(s, jobId); const t = nextTeam(j, k);
   const u = s.uniques.find((x) => x.placedJob === jobId);
   const lines = [
     `${j.tierLabel} · ${formatKR(k)}명 · 초당 ${formatKR(jobIncomeBase(s, j) * feverMult(s))}원`,

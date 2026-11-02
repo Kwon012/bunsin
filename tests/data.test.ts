@@ -10,7 +10,7 @@ describe('csv parser', () => {
   });
 });
 
-describe('economy v0.2 validation', () => {
+describe('economy v0.3 validation', () => {
   it('검증 오류 없음', () => expect(validateEconomy(ECON)).toEqual([]));
   it('도시 8, 직종 58, 칸 수 5·6·7·8·8·8·8·8', () => {
     expect(ECON.cities.length).toBe(8);
@@ -20,27 +20,23 @@ describe('economy v0.2 validation', () => {
   it('도시마다 is_top 1개', () => {
     for (const c of ECON.cities) expect(ECON.jobs.filter((j) => j.city === c.city && j.isTop).length).toBe(1);
   });
-  it('칸 해금 체인: 2~7칸 25명, 8칸 10명', () => {
+  it('칸 해금 체인: 2~7칸 = 이전 칸 정원의 40%, 8칸 = 10명(R-006)', () => {
     for (const j of ECON.jobs) {
       if (j.slot === 1) expect(j.unlockPrevCount).toBe(0);
-      else expect(j.unlockPrevCount).toBe(j.slot === 8 ? 10 : 25);
+      else if (j.slot === 8) expect(j.unlockPrevCount).toBe(10);
+      else expect(j.unlockPrevCount).toBe(Math.round(j.maxCount * 0.4));
     }
   });
-  // v0.1 jobs.csv 원본이 없어 기획서 서술(도시 1 = v3.6 그대로: 기본가 10·×150, 수입 1·×9, 증가율 1.07~1.11)로 대조한다.
-  it('도시 1 수치 = 기획서 v3.6 서술', () => {
-    const c1 = ECON.jobs.filter((j) => j.city === 1);
-    c1.forEach((j, i) => {
-      expect(j.baseCost).toBeCloseTo(10 * 150 ** i, 6);
-      expect(j.incomePerSec).toBeCloseTo(9 ** i, 6);
-      expect(j.costGrowth).toBeCloseTo(1.07 + 0.01 * i, 9);
-    });
-  });
-  it('도시 2~8: 1칸 = 이전 꼭대기 ×10, 칸 사이 ×12 (유효숫자 3자리 반올림 누적 오차 1.5% 허용)', () => {
-    for (let c = 2; c <= 8; c++) {
-      const prevTop = ECON.jobs.find((j) => j.city === c - 1 && j.isTop)!;
-      const js = ECON.jobs.filter((j) => j.city === c);
-      expect(Math.abs(js[0].baseCost / (prevTop.baseCost * 10) - 1)).toBeLessThan(0.015);
-      for (let i = 1; i < js.length; i++) expect(Math.abs(js[i].baseCost / (js[i - 1].baseCost * 12) - 1)).toBeLessThan(0.015);
+  it('v0.3: 직종마다 정원·자산 1개, 도시마다 집 3단계(시작 집 무료)·가구', () => {
+    for (const j of ECON.jobs) { expect(j.maxCount).toBeGreaterThan(0); expect(ECON.assets.filter((a) => a.jobId === j.id).length).toBe(1); }
+    for (const c of ECON.cities) {
+      const hs = ECON.houses.filter((h) => h.city === c.city);
+      expect(hs.length).toBe(3); expect(hs[0].price).toBe(0);
     }
+    expect(ECON.cities[0].firstIncome).toBe(10320); // 2026 최저시급
+  });
+  it('도시가 넘어갈수록 정원이 커져 오래 걸림', () => {
+    const caps = ECON.cities.map((c) => ECON.jobs.find((j) => j.city === c.city)!.maxCount);
+    for (let i = 1; i < caps.length; i++) expect(caps[i]).toBeGreaterThanOrEqual(caps[i - 1]);
   });
 });

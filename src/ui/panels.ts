@@ -36,7 +36,7 @@ export class ClonesPanel extends Panel {
     c.add(txt(sc, 12, y, `전체 분신 ${formatKR(totalClones(s))}명 · ${city(s).name}`, 16, C.gold, { fontStyle: 'bold' })); y += 28;
     for (const j of cityJobs(s)) {
       if (!isUnlocked(s, j)) continue;
-      const k = owned(s, j.id); const t = nextTeam(k);
+      const k = owned(s, j.id); const t = nextTeam(j, k);
       c.add(sc.add.rectangle(16, y + 8, 8, 14, TIER_COLOR[j.tier]));
       c.add(txt(sc, 26, y, `${j.name} ${formatKR(k)}명`, 12));
       c.add(txt(sc, W - 12, y, t ? `다음 팀 보너스까지 ${t - k}명` : '팀 보너스 완료', 11, C.dim).setOrigin(1, 0));

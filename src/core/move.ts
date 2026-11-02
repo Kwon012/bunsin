@@ -1,6 +1,7 @@
 // 이사(프레스티지): 꼭대기 직종 첫 고용 후 가능. 초기화 = 돈·분신·자격증 / 유지 = 명성·매니저·통장·개성 분신
 import { city, cityJobs, totalFame, totalClones, eco, D } from './econ';
 import { accountOnMove } from './account';
+import { homeOnMove } from './home';
 import { autoPlace } from './uniques';
 import { canMove } from './recommend';
 import { earn, firstAt, happening } from './ledger';
@@ -35,6 +36,7 @@ export function moveCity(s: GameState, out: GameEvent[] = []): boolean {
   for (const u of s.uniques) u.placedJob = null;
   // 유지: 명성(fameByCity), 매니저, 통장(지금 종목 → 보유 종목), 개성 분신
   accountOnMove(s);
+  homeOnMove(s); // 자산·산 집은 총자산에 남고, 새 도시의 시작 집에서 다시 꾸민다
   autoPlace(s);
   const nc = city(s);
   earn(s, 'settle', nc.settleMoney);

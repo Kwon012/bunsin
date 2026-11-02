@@ -1,6 +1,6 @@
 // 유저 액션: 고용, 자격증, 탭, 꾹 누르기, 피버. 이벤트는 out에 쌓는다.
 import { A } from './assumptions';
-import { cityJobs, eco, hireCost, hireCostN, isUnlocked, job, maxAffordable, nextCert, owned, tapValue, totalClones, D } from './econ';
+import { cityJobs, eco, hireCostN, isUnlocked, job, maxAffordable, nextCert, owned, tapValue, totalClones, capLeft, teamCounts, D } from './econ';
 import type { GameEvent, GameState } from './state';
 import { earn, firstAt, happening } from './ledger';
 import { unitIndex } from './format';
@@ -16,7 +16,8 @@ export function hireQuote(s: GameState, jobId: string, amt: HireAmount): { n: nu
     const n = maxAffordable(j, k, s.money);
     return { n, cost: hireCostN(j, k, n) };
   }
-  return { n: amt, cost: hireCostN(j, k, amt) };
+  const n = Math.min(amt, capLeft(j, k));
+  return { n, cost: hireCostN(j, k, n) };
 }
 
 export function hire(s: GameState, jobId: string, amt: HireAmount, out: GameEvent[] = []): boolean {
@@ -34,10 +35,15 @@ export function hire(s: GameState, jobId: string, amt: HireAmount, out: GameEven
   happening(s);
   firstAt(s, 'first_clone');
   // 팀 보너스 단계
-  for (const m of D.team) if (before < m.count && before + n >= m.count) {
-    out.push({ t: 'team', jobId, count: m.count });
-    if (m.count === 25) s.flags.team25 = 1;
-  }
+  if (before === 0) { s.firstHired[jobId] = s.playTime; out.push({ t: 'first_job', jobId }); }
+  teamCounts(j).forEach((c, i) => {
+    if (before < c && before + n >= c) {
+      out.push({ t: 'team', jobId, count: c });
+      if (i === 0) s.flags.team25 = 1; // 첫 팀 보너스(개성 분신 조건)
+      s.teamPhotos[`${jobId}:${i + 1}`] = s.playTime; // 단체 사진 수집
+    }
+  });
+  if (capLeft(j, before + n) === 0) out.push({ t: 'cap_full', jobId });
   // 새 칸 해금
   for (const id of lockedBefore) if (isUnlocked(s, job(id))) {
     out.push({ t: 'unlock', jobId: id });

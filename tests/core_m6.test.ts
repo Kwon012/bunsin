@@ -38,11 +38,11 @@ describe('마무리 카드', () => {
 
 describe('8시간 복귀 시나리오', () => {
   it('정산서 생성 + MVP + 상한', () => {
-    const s = fresh(); s.owned.home_1 = 50; s.owned.home_2 = 30; s.lastSeen = 0;
+    const s = fresh(); s.owned.home_1 = 10; s.owned.home_2 = 30; s.lastSeen = 0;
     resume(s, 9 * 3600e3);
     const rep = s.pendingOffline!;
     expect(rep.capped).toBe(true);
-    expect(rep.paydays).toBeGreaterThanOrEqual(17);
+    expect(rep.paydays).toBeGreaterThanOrEqual(100);
     expect(offlineMvp(rep)!.jobId).toBe('home_2');
     void simulateOffline;
   });
