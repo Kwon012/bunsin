@@ -17,6 +17,10 @@ import { A } from '../core/assumptions';
 import { cityJobs } from '../core/econ';
 import { eventCardFlow, buildingCard, uniqueCard, sceneCard, clonesExtra } from '../ui/m4';
 import { photoCard } from '../ui/flows';
+import { managerFlow, topHiredFlow, moveCard, accountCard, breakAndBuy } from '../ui/m5';
+import { debugExtra } from '../debug/debug';
+import { debugPrepareMove } from '../core/move';
+import { D } from '../core/econ';
 import type { EventCard } from '../data/content';
 import type { GameEvent } from '../core/state';
 import type { HomeScene } from './HomeScene';
@@ -81,6 +85,14 @@ export class UIScene extends Phaser.Scene implements UiCtx {
     this.home().onBubbleTap = openEvent;
     this.village().onBubbleTap = openEvent;
     this.village().onBuildingTap = (j) => this.queue.push((d) => buildingCard(this, j.id, d), 'bcard');
+    this.village().onTruckTap = () => this.queue.push((d) => moveCard(this, d), 'move');
+    this.hud.piggy.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.queue.push((d) => accountCard(this, d), 'account'));
+    debugExtra.push({ label: '도시+1 준비', fn: () => {
+      const n = Math.min(D.cities.length, G.s.cityIdx + 2);
+      debugPrepareMove(G.s, n);
+      G.dispatch([{ t: 'move', fromCity: G.s.cityIdx, toCity: G.s.cityIdx, fameGain: 0, settle: 0 }]);
+      this.toast(`${D.cities[G.s.cityIdx].name}: 꼭대기 첫 고용 상태 → 트럭으로 ${D.cities[G.s.cityIdx + 1]?.name ?? '-'} 이사 가능`);
+    } });
     this.village().onSceneTap = (id) => this.queue.push((d) => sceneCard(this, id, d), 'scene');
     // 사운드 끄기
     const snd = button(this, W - 22, 88, 34, 22, G.s.settings.sound ? '🔊' : '🔇', () => {
@@ -103,6 +115,8 @@ export class UIScene extends Phaser.Scene implements UiCtx {
     on('unit', (e) => { if (e.t !== 'unit') return; const u = UNITS[e.index]; if (u) this.toast(`새 단위! ${lineText('unit', u.name) ?? u.name}`, C.gold); });
     on('fever_end', (e) => e.t === 'fever_end' && this.toast(`피버 끝! 이번 콤보 ${e.combo} · 오늘 최고 콤보 ${Math.max(G.s.bestCombo, e.combo)}`));
     G.bus.on('resumed', () => { if (G.s.pendingOffline && !this.queue.has('settle')) this.queue.push((d) => settlementFlow(this, d), 'settle', true); });
+    on('manager', () => this.queue.push((d) => managerFlow(this, d), 'manager'));
+    on('top_hired', (e) => e.t === 'top_hired' && this.queue.push((d) => topHiredFlow(this, e.jobId, d), 'top'));
     on('unique', (e) => e.t === 'unique' && this.queue.push((d) => uniqueCard(this, e.id, d), 'unique'));
     on('crown', (e) => e.t === 'crown' && this.toast(`👑 ${e.total}번째 분신! 왕관 쓴 기념 분신`, C.gold));
   }
@@ -145,6 +159,9 @@ export class UIScene extends Phaser.Scene implements UiCtx {
     this.refreshT += delta;
     if (this.refreshT > 200) {
       this.refreshT = 0;
+      const w = wallInfo(G.s);
+      this.sheet.extra = w.breakSuggest ? { label: '🐷 통장 깨서 지금 사기', cb: () => breakAndBuy(this) }
+        : w.moveSuggest ? { label: '🚚 이사 추천! (선택)', cb: () => this.queue.push((d) => moveCard(this, d), 'move') } : null;
       this.sheet.refresh();
       this.tabBtns.village.setAlpha(G.s.flags.villageRevealed ? 1 : 0.4);
       if (this.clonesPanel.visible) this.clonesPanel.render();

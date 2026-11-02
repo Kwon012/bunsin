@@ -11,6 +11,7 @@ import { setupCam, txt, W, R, C } from '../ui/kit';
 import type { GameEvent } from '../core/state';
 import type { Tier } from '../data/economy';
 import { eventBubble } from '../ui/m4';
+import { directTapFaster } from '../ui/m5';
 
 const CAP = 150; // 홈 표시 상한
 const BODY = { x: 180, y: 300 };
@@ -43,6 +44,8 @@ export class HomeScene extends Phaser.Scene {
   onBubbleTap?: () => void;
   private bubble?: Phaser.GameObjects.Container;
   private uniqueLayer?: Phaser.GameObjects.Container;
+  private manager?: Phaser.GameObjects.Container;
+  private fasterText!: Phaser.GameObjects.Text;
 
   constructor() { super('Home'); }
 
@@ -78,13 +81,16 @@ export class HomeScene extends Phaser.Scene {
     this.on2('fever_start', () => this.feverStart());
     this.on2('fever_end', () => this.feverEnd());
     this.on2('payday', () => this.cheer());
-    this.on2('crown', () => this.time.delayedCall(800, () => { const c = this.clones[this.clones.length - 1]; if (c) this.add.image(c.x, c.y - 14, 'crown').setScale(1 / R).setDepth(c.depth + 1); }));
+    this.on2('crown', () => this.time.delayedCall(800, () => { const c = this.clones[this.clones.length - 1]; if (c) this.crowns.push(this.add.image(c.x, c.y - 14, 'crown').setScale(1 / R).setDepth(c.depth + 1)); }));
     this.on2('move', () => { this.rebuildClones(); this.refreshStage(); this.drawWindow(); this.drawUniques(); });
     this.on2('tap', (e) => { if (e.t === 'tap' && e.auto) this.tapFx(BODY.x + Phaser.Math.Between(-30, 30), BODY.y - 40, e.amount, true); });
     this.on2('unique', () => this.drawUniques());
     G.bus.on('event_bubble', () => { this.bubble?.destroy(); this.bubble = eventBubble(this, 100, 250, () => this.onBubbleTap?.()); }, this);
     G.bus.on('event_bubble_end', () => { this.bubble?.destroy(); this.bubble = undefined; }, this);
     this.drawUniques();
+    this.fasterText = txt(this, BODY.x, BODY.y - 70, ' ', 11, '#06d6a0', { fontStyle: 'bold', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } }).setOrigin(0.5).setDepth(60).setVisible(false);
+    this.drawManager();
+    this.on2('manager', () => this.drawManager());
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this.handlers.forEach(([k, f]) => G.bus.off(k, f)));
   }
 
@@ -98,6 +104,17 @@ export class HomeScene extends Phaser.Scene {
     g.fillStyle(0x223344, 0.45).fillRect(64, 98, 22, 42).fillTriangle(60, 100, 75, 88, 90, 100);
     g.lineStyle(4, 0x8d6e4a, 1).strokeRect(20, 86, 110, 92).lineBetween(75, 86, 75, 178).lineBetween(20, 132, 130, 132);
     this.windowLabel.setText(`잠긴 구역: ${city(G.s).topBuilding}`);
+  }
+
+  /** 매니저 분신(클립보드) + 본체 커피 */
+  drawManager() {
+    this.manager?.destroy();
+    if (!G.s.managerUnlocked) return;
+    const m = this.add.image(0, 0, 'clone_job').setScale(1.8 / R);
+    const clip = txt(this, 14, -6, '📋', 12).setOrigin(0.5);
+    const coffee = txt(this, BODY.x + 42 - (W / 2 + 60), 0, '☕', 16).setOrigin(0.5);
+    this.manager = this.add.container(W / 2 + 60, BODY.y + 30, [m, clip, coffee]).setDepth(46);
+    m.setPosition(26, 10); clip.setPosition(40, 4);
   }
 
   /** 개성 분신은 홈에서도 본체 곁에 보인다(이사 후 새 도시 첫 화면부터) */
@@ -147,7 +164,10 @@ export class HomeScene extends Phaser.Scene {
     return img;
   }
 
+  private crowns: Phaser.GameObjects.Image[] = [];
   rebuildClones() {
+    for (const c of this.crowns) c.destroy();
+    this.crowns = [];
     for (const c of this.clones) c.destroy();
     this.clones = [];
     const s = G.s;
@@ -247,6 +267,13 @@ export class HomeScene extends Phaser.Scene {
 
   update() {
     const s = G.s;
+    if (s.managerUnlocked) {
+      const now = performance.now();
+      while (this.playerTapTimes.length && now - this.playerTapTimes[0] > A.X_tapRateWindowSec * 1000) this.playerTapTimes.shift();
+      const f = directTapFaster(this.playerTapTimes, A.X_tapRateWindowSec, A.X_managerTapsPerSec);
+      if (f) this.fasterText.setText('직접 탭 = 더 빠름!');
+      this.fasterText.setVisible(f);
+    }
     // 피버 3단계 색 변화(충전 중 게이지 단계 / 피버 중 맥동)
     if (s.feverLeft > 0) this.feverTint.setFillStyle(0xff006e, 0.12 + 0.08 * Math.sin(this.time.now / 120));
     else {

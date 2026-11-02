@@ -50,7 +50,7 @@ export class VillageScene extends Phaser.Scene {
     const on = (k: string, f: (e: GameEvent) => void) => { G.bus.on(k, f); this.handlers.push([k, f]); };
     on('hire', () => this.refresh());
     on('unlock', () => this.build());
-    on('move', () => this.build());
+    on('move', () => { this.cy = 0; this.build(); });
     on('top_hired', () => this.build());
     on('unique', () => this.build());
     G.bus.on('event_bubble', this.showBubble, this);
