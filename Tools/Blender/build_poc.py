@@ -327,7 +327,7 @@ def update_ledger(rows):
     ids = {r["id"] for r in rows}
     merged = [r for r in existing if r["id"] not in ids] + rows
     with open(path, "w", encoding="utf-8", newline="") as fp:
-        w = csv.DictWriter(fp, fieldnames=fields)
+        w = csv.DictWriter(fp, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         w.writerows(merged)
 
