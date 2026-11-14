@@ -1,0 +1,11 @@
+id,base,tag,slot_kind,note
+furn_bed_double_natural,bed_double,natural,침대,M방 2인 침대
+furn_bed_double_sea,bed_double,sea,침대,
+furn_desk_basic_natural,desk_basic,natural,책상,
+furn_desk_basic_sea,desk_basic,sea,책상,
+furn_wardrobe_2door_natural,wardrobe_2door,natural,수납,
+furn_wardrobe_2door_sea,wardrobe_2door,sea,수납,
+furn_lamp_floor_natural,lamp_floor,natural,조명,
+furn_lamp_floor_sea,lamp_floor,sea,조명,
+furn_chair_basic_natural,chair_basic,natural,소품,책상 의자
+furn_chair_basic_sea,chair_basic,sea,소품,

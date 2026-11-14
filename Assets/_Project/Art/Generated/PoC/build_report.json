@@ -1,0 +1,123 @@
+[
+  {
+    "id": "furn_bed_double_natural",
+    "tris": 484,
+    "verts": 264,
+    "size_m": [
+      1.6,
+      2.14,
+      1.0
+    ],
+    "ms": 19
+  },
+  {
+    "id": "furn_bed_double_sea",
+    "tris": 484,
+    "verts": 264,
+    "size_m": [
+      1.6,
+      2.14,
+      1.0
+    ],
+    "ms": 8
+  },
+  {
+    "id": "furn_desk_basic_natural",
+    "tris": 352,
+    "verts": 192,
+    "size_m": [
+      1.0,
+      0.55,
+      0.75
+    ],
+    "ms": 7
+  },
+  {
+    "id": "furn_desk_basic_sea",
+    "tris": 352,
+    "verts": 192,
+    "size_m": [
+      1.0,
+      0.55,
+      0.75
+    ],
+    "ms": 7
+  },
+  {
+    "id": "furn_wardrobe_2door_natural",
+    "tris": 308,
+    "verts": 168,
+    "size_m": [
+      1.04,
+      0.61,
+      1.94
+    ],
+    "ms": 6
+  },
+  {
+    "id": "furn_wardrobe_2door_sea",
+    "tris": 308,
+    "verts": 168,
+    "size_m": [
+      1.04,
+      0.61,
+      1.94
+    ],
+    "ms": 6
+  },
+  {
+    "id": "furn_lamp_floor_natural",
+    "tris": 120,
+    "verts": 68,
+    "size_m": [
+      0.4,
+      0.42,
+      1.56
+    ],
+    "ms": 5
+  },
+  {
+    "id": "furn_lamp_floor_sea",
+    "tris": 120,
+    "verts": 68,
+    "size_m": [
+      0.4,
+      0.42,
+      1.56
+    ],
+    "ms": 5
+  },
+  {
+    "id": "furn_chair_basic_natural",
+    "tris": 396,
+    "verts": 216,
+    "size_m": [
+      0.42,
+      0.42,
+      0.87
+    ],
+    "ms": 7
+  },
+  {
+    "id": "furn_chair_basic_sea",
+    "tris": 396,
+    "verts": 216,
+    "size_m": [
+      0.42,
+      0.42,
+      0.87
+    ],
+    "ms": 7
+  },
+  {
+    "id": "room_shell_m",
+    "tris": 384,
+    "verts": 224,
+    "size_m": [
+      3.72,
+      3.72,
+      2.6
+    ],
+    "ms": 6
+  }
+]

@@ -1,0 +1,48 @@
+{
+  "comment": "색상표 아틀라스 정의. 행 = 묶음(shell=방 껍데기, 태그별 가구), 열 = 의미 슬롯. 슬롯 순서가 곧 열 번호. 빈 칸은 마젠타(UV 오류 확인용).",
+  "cols": 8,
+  "rows": 8,
+  "cell_px": 32,
+  "empty": "#ff00ff",
+  "groups": {
+    "shell": {
+      "row": 0,
+      "colors": {
+        "floor": "#d9a86c",
+        "wallpaper": "#f3ede2",
+        "slab": "#9aa1a6",
+        "baseboard": "#8a5a3b",
+        "frame": "#fafafa",
+        "glass": "#bfe3ee"
+      }
+    },
+    "natural": {
+      "row": 1,
+      "label": "#내추럴",
+      "colors": {
+        "wood": "#c9a27a",
+        "wood_dark": "#8b6446",
+        "fabric": "#e9dfcc",
+        "fabric_accent": "#9cb38f",
+        "linen": "#f7f3ea",
+        "metal": "#b8955a",
+        "shade": "#f1e6d2",
+        "bulb": "#fff4c9"
+      }
+    },
+    "sea": {
+      "row": 2,
+      "label": "#바다",
+      "colors": {
+        "wood": "#e6e8e3",
+        "wood_dark": "#a89a86",
+        "fabric": "#f4f6f7",
+        "fabric_accent": "#2f5d8a",
+        "linen": "#dbe9f0",
+        "metal": "#c9ccce",
+        "shade": "#7fb8c9",
+        "bulb": "#fff4c9"
+      }
+    }
+  }
+}
