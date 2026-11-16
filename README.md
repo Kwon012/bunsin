@@ -13,17 +13,22 @@ Assets/_Project/
   Scripts/Sim/           순수 C# 시뮬레이션 (Bunsin.Sim, noEngineReferences)
     Clock/ World/ Systems/ Rng/ Events/
   Scripts/Presentation/  MonoBehaviour 연출·UI (Bunsin.Presentation → Sim 참조)
+  Scripts/Editor/        에디터 도구: Blender 연결, 생성 에셋 가져오기 규칙 (Bunsin.EditorTools)
+  Art/Generated/         Blender 스크립트가 만든 FBX·색상표 (직접 수정 금지, 스크립트로 재생성)
   Data/                  ScriptableObject 데이터 (LodgingTypeDef, FurnitureDef …)
   Art/ Audio/ Prefabs/ Scenes/ UI/ Localization/
   Tests/EditMode/        Sim 단위 테스트·밸런스 봇 (Bunsin.Sim.Tests)
   Tests/PlayMode/        UI·가이드 키 테스트
-Design/Sheets/           기획 스프레드시트 CSV 원본 → 가져오기 스크립트로 SO 생성
+Design/Sheets/           기획 스프레드시트 CSV 원본, 출처 대장(asset_ledger.csv)
+Tools/Blender/           에셋 생성 스크립트 (build_poc.py, palette.json, build.ps1/.sh)
 docs/                    기획·결정 기록
 ```
 
 규칙: **Sim은 UnityEngine을 참조하지 않는다.** Presentation은 Sim 이벤트를 받아 그리기만 하고, 입력은 Command로 Sim에 전달한다.
 
 ## 처음 세팅 (사람이 1회)
+
+Blender·Unity·Claude Code 연결 전체 절차: [docs/local-setup.md](docs/local-setup.md)
 
 1. Git LFS 설치 후 `git lfs install`
 2. Unity Hub에서 Unity **6.3 LTS** + Android/iOS 빌드 모듈 설치

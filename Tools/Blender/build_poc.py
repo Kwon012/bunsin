@@ -272,10 +272,8 @@ def build_object(name, parts, group, pal, mat, coll):
 
 def new_material(name):
     mat = bpy.data.materials.new(name)
-    try:
+    if bpy.app.version < (5, 0, 0):   # 5.0부터 노드는 항상 켜져 있음
         mat.use_nodes = True
-    except (AttributeError, TypeError):
-        pass
     nt = mat.node_tree
     nt.nodes.clear()
     out = nt.nodes.new("ShaderNodeOutputMaterial")
@@ -348,10 +346,8 @@ def setup_render(scene, samples, scale):
 
     world = bpy.data.worlds.new("W_Preview")
     scene.world = world
-    try:
+    if bpy.app.version < (5, 0, 0):
         world.use_nodes = True
-    except (AttributeError, TypeError):
-        pass
     nt = world.node_tree
     nt.nodes.clear()
     out = nt.nodes.new("ShaderNodeOutputWorld")
@@ -495,7 +491,11 @@ def main():
         license_ref="", commercial_ok="예", credit_required="아니오",
         human_work="색 값 지정, 사람 검수 대기", record_location="Tools/Blender/palette.json",
         owner="AI 에이전트", reviewer="", created=today))
-    update_ledger(ledger)
+    out_abs = os.path.abspath(args.out)
+    if os.path.commonpath([out_abs, ROOT]) == ROOT:   # 저장소 밖(테스트 출력)이면 대장에 쓰지 않음
+        update_ledger(ledger)
+    else:
+        print("[ledger] 출력 폴더가 저장소 밖이라 출처 대장을 건너뜀")
 
     for r in report:
         print(f"[model] {r['id']:<30} tris={r['tris']:>4} verts={r['verts']:>4} size={r['size_m']} {r['ms']}ms")

@@ -37,3 +37,5 @@
 *.aar  filter=lfs diff=lfs merge=lfs -text
 *.zip  filter=lfs diff=lfs merge=lfs -text
 LightingData.asset filter=lfs diff=lfs merge=lfs -text
+*.sh         text eol=lf
+*.ps1        text eol=crlf
