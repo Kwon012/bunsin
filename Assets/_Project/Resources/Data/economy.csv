@@ -1,0 +1,71 @@
+key,value,note
+data_version,0.4,v4 B안(S2·P1) 임시 수치
+seats_per_job,5,일터마다 자리 5칸
+payday_first_sec,180,첫 월급날(누적 접속 시간)
+payday_period_sec,600,월급날 주기 = 게임 속 한 달
+payday_min_income_sec,120,월급날 보너스 하한 = 초당 수입 × 이 값
+tap_income_ratio,0.12,탭 1회 = tap_base + 초당 수입 × 이 값
+hold_taps_per_sec,3,꾹 누르기 자동 탭 속도
+fever_taps,30,피버 게이지를 채우는 탭 수
+fever_hold_charge,0.34,꾹 누르기 탭의 게이지 충전 비율
+fever_duration_sec,15,피버 지속 시간
+fever_mult,3,피버 중 근로 수입 배수
+fever_decay_delay_sec,3,탭을 멈춘 뒤 게이지가 줄기 시작하는 시간
+fever_decay_per_sec,0.05,게이지 감쇠(초당 비율)
+hire_growth,1.5,신입 고용가 증가율(현재 분신 수 기준)
+level_bonus,0.04,레벨 1당 수입 +4%(더하기)
+apt_bonus,0.25,적성 일치 수입 보너스
+apt_xp_bonus,0.25,적성 일치 경험 보너스
+apt_first_match_reward_sec,60,적성 맞는 자리 첫 배치 보상 = 초당 수입 × 이 값
+xp_base_sec,15,레벨 1→2에 필요한 근무 시간(초)
+xp_growth,1.08,레벨마다 필요 시간 증가율
+level_per_slot,10,칸마다 승진 기준 레벨 = 칸 × 이 값
+bonus_xp_cap_levels,3,상한을 넘겨 저장되는 보너스 훈련의 최대량(레벨 수)
+train_cost_factor,2.5,훈련비 = 그 분신 초당 수입 × 남은 경험(초) × 이 값
+promo_cost_sec,240,승진비 = 윗자리 기본 수입 × 이 값
+cert_cost_mult,2,자격증 가격 = 승진비 × 이 값(도시마다 1회)
+facility_bonus,0.1,시설 1단계당 일터 수입 +10%(더하기)
+facility_cost_sec,150,시설 첫 단계 가격 = 일터 기본 수입 × 이 값
+facility_growth,1.15,시설 가격 증가율
+facility_max_level,30,시설 최고 단계
+facility_stage_levels,5,시설 5단계마다 '등급' 1 상승
+cap_per_facility_stage,2,시설 등급 1당 그 일터 레벨 상한 +2
+offline_cap_sec,28800,오프라인 정산 상한(8시간)
+offline_after_cap_ratio,0.25,상한 이후 누적 속도
+offline_xp_rate,1.0,오프라인 경험 누적 비율
+offline_min_sec,60,이보다 짧은 부재는 정산서를 띄우지 않음
+manager_unlock_paydays,4,접속 중 월급날 수령 횟수로 매니저 무료 해금
+manager_interval_sec,1.5,매니저가 추천 행동을 실행하는 간격
+fame_bonus,0.05,명성 1당 수입 +5%(더하기)
+retire_bonus,0.01,명예의 전당 1명당 수입 +1%(명성 원천에 더하기)
+retire_cap_extra_levels,10,꼭대기 자리 은퇴 기준 = 승진 기준 레벨 + 이 값
+move_keep_level_ratio,0.3,이사 때 유지되는 레벨 비율(P1 경력직)
+move_recommend_eta_sec,180,다음 추천 구매까지 이 시간이 넘으면 이사 추천(R-015 벽 기준)
+settle_hire_count,3,정착금 = 새 도시 신입 고용가 × 이 값
+deposit_rate,0.02,예금 이자(월급날마다)
+deposit_cap_income_sec,3600,예금 한도 = 초당 수입 × 이 값
+stock_list_level,10,일터 시설이 이 단계면 상장
+stock_lot_cost_sec,400,주식 1주 가격 = 일터 기본 수입 × 이 값 × (1 + 0.1 × 시설 단계)
+stock_dividend_rate,0.03,배당 = 보유 평가액 × 이 값(월급날마다)
+stock_bonus_per_lot,0.01,1주당 그 일터 수입 +1%(자산 원천)
+property_rent_rate,0.04,월세 = 매입가 × 이 값(월급날마다)
+property_remodel_max,3,리모델링 최대 단계
+property_remodel_cost_ratio,0.5,리모델링 비용 = 매입가 × 이 값
+property_remodel_rent_bonus,0.4,리모델링 1단계당 월세 +40%
+old_city_asset_cap_income_sec,300,떠난 도시 자산 수입 상한(월급날당) = 지금 초당 수입 × 이 값
+event_idle_sec,12,무반응이 이만큼 이어지면 사건 말풍선
+event_min_gap_sec,30,사건 최소 간격
+event_early_gap_sec,20,세션 첫 3분의 사건 최소 간격
+event_early_window_sec,180,세션 초반 구간
+event_bubble_sec,25,말풍선 유지 시간
+event_repeat_gap_sec,600,같은 사건 재등장 간격
+news_interval_sec,60,마을 뉴스 간격
+closing_idle_sec,20,마무리 카드 제안까지의 무반응 시간
+closing_gap_sec,600,마무리 카드 재제안 간격
+layer_gap_sec,90,새 시스템 소개 사이의 최소 간격
+ad_boost_mult,2,보상형 광고 부스트 배수
+ad_boost_sec,600,보상형 광고 부스트 시간
+ad_daily_cap,6,보상형 광고 일일 상한
+ad_cooldown_sec,120,보상형 광고 쿨타임
+time_ticket_sec,7200,시간 가속권 1장 = 이 시간만큼의 수입
+stamp_gift_day,7,출근 도장 기념 분신(개성) 지급 일차

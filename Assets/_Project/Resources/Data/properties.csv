@@ -1,0 +1,33 @@
+id,city,name,price,req_status,boost_tier,boost_pct,sprite
+home_p1,1,원룸 건물,720000000,0,,0.0,p_villa
+home_p2,1,동네 상가,2880000000,0,alba,0.1,p_mall
+home_p3,1,상가주택,9000000000,1,biz,0.1,p_mixed
+home_p4,1,꼬마빌딩,28800000000,1,job,0.1,p_building
+busan_p1,2,바닷가 오피스텔,87500000000,1,,0.0,p_villa
+busan_p2,2,관광 숙소,350000000000,1,alba,0.1,p_mall
+busan_p3,2,해변 상가,1090000000000,2,biz,0.1,p_mixed
+busan_p4,2,마린 타워 한 층,3500000000000,2,job,0.1,p_building
+yeouido_p1,3,증권가 오피스텔,22600000000000,2,,0.0,p_villa
+yeouido_p2,3,지하 아케이드,90300000000000,2,alba,0.1,p_mall
+yeouido_p3,3,금융 빌딩 한 층,282000000000000,3,biz,0.1,p_mixed
+yeouido_p4,3,여의도 오피스 빌딩,903000000000000,3,inv,0.1,p_building
+tokyo_p1,4,원룸 맨션,1.05e16,3,,0.0,p_villa
+tokyo_p2,4,상점가 점포,4.19e16,3,alba,0.1,p_mall
+tokyo_p3,4,캐릭터 스트리트 빌딩,1.31e17,4,biz,0.1,p_mixed
+tokyo_p4,4,롯폰기 오피스,4.19e17,4,inv,0.1,p_building
+shanghai_p1,5,골목 아파트,7.20e18,4,,0.0,p_villa
+shanghai_p2,5,야시장 점포,2.88e19,4,alba,0.1,p_mall
+shanghai_p3,5,물류 창고,9.00e19,5,biz,0.1,p_mixed
+shanghai_p4,5,와이탄 빌딩,2.88e20,5,inv,0.1,p_building
+dubai_p1,6,사막 빌라,4.95e21,5,,0.0,p_villa
+dubai_p2,6,쇼핑몰 점포,1.98e22,5,alba,0.1,p_mall
+dubai_p3,6,개발 부지,6.19e22,6,biz,0.1,p_mixed
+dubai_p4,6,마리나 타워,1.98e23,6,inv,0.1,p_building
+valley_p1,7,차고 딸린 집,3.41e24,6,,0.0,p_villa
+valley_p2,7,공유 오피스,1.36e25,6,alba,0.1,p_mall
+valley_p3,7,스타트업 캠퍼스,4.26e25,7,biz,0.1,p_mixed
+valley_p4,7,데이터센터,1.36e26,7,inv,0.1,p_building
+newyork_p1,8,브루클린 아파트,2.34e27,7,,0.0,p_villa
+newyork_p2,8,브로드웨이 점포,9.38e27,7,alba,0.1,p_mall
+newyork_p3,8,맨해튼 오피스,2.93e28,7,biz,0.1,p_mixed
+newyork_p4,8,맨해튼 빌딩,9.38e28,7,inv,0.1,p_building
