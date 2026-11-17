@@ -33,11 +33,11 @@ namespace Bunsin.Presentation
             _room = Ui.Node("Room", Root);
             _room.Fill();
             _wall = Ui.Box(_room, Palette.Cream, "Wall");
-            _wall.Rt().Span(0, 0.26f, 1, 1);
+            _wall.Rt().Span(0, 0.34f, 1, 1);
             _floor = Ui.Box(_room, Palette.Wood, "Floor");
-            _floor.Rt().Span(0, 0, 1, 0.26f);
+            _floor.Rt().Span(0, 0, 1, 0.34f);
             var skirting = Ui.Box(_room, Palette.Alpha(Palette.Ink, 0.25f), "Skirting");
-            skirting.Rt().anchorMin = new Vector2(0, 0.26f); skirting.Rt().anchorMax = new Vector2(1, 0.26f);
+            skirting.Rt().anchorMin = new Vector2(0, 0.34f); skirting.Rt().anchorMax = new Vector2(1, 0.34f);
             skirting.Rt().sizeDelta = new Vector2(0, 10);
 
             // 탭 영역: 방 전체. 거울·창문·버튼은 위에 있어서 먼저 받는다
@@ -47,7 +47,7 @@ namespace Bunsin.Presentation
 
             // 창문(잠긴 구역 미리보기: 그 도시 꼭대기 건물이 보인다)
             var winBtn = Ui.HitArea(_room, () => { if (G.TabUnlocked(Game.TabVillage)) G.ShowTab(Game.TabVillage); else G.Popups.Toast("창밖으로 " + Sim.City.TopBuilding + "이(가) 보여요", "i_village"); }, "Window");
-            winBtn.Rt().Place(0.68f, 0.86f, 420, 350, 0, 0, 0.5f, 1);
+            winBtn.Rt().Place(0.68f, 0.95f, 420, 350, 0, 0, 0.5f, 1);
             _window = Ui.Image(winBtn.transform, "o_window", Color.white, "Img");
             _window.Rt().Fill();
             _truck = Ui.Image(winBtn.transform, "i_truck", Color.white, "Truck");
@@ -56,12 +56,12 @@ namespace Bunsin.Presentation
             _houseName.Rt().Place(0, 1, 520, 40, 30, -18, 0, 1);
 
             _crowd = Ui.Node("Crowd", _room);
-            _crowd.Span(0, 0.08f, 1, 0.3f);
+            _crowd.Span(0, 0.21f, 1, 0.36f);
 
             // 거울 = 고용
             var mirrorBtn = Ui.HitArea(_room, OnMirror, "Mirror");
             MirrorRt = mirrorBtn.Rt();
-            MirrorRt.Place(0.15f, 0.22f, 240, 380, 0, 0, 0.5f, 0);
+            MirrorRt.Place(0.15f, 0.27f, 240, 380, 0, 0, 0.5f, 0);
             mirrorBtn.gameObject.AddComponent<PressFeel>().Button = mirrorBtn;
             var mirror = Ui.Image(MirrorRt, "o_mirror", Color.white, "Img");
             mirror.Rt().Fill(0, 40, 0, 0);
@@ -76,7 +76,7 @@ namespace Bunsin.Presentation
 
             // 본체
             var heroHolder = Ui.Node("HeroHolder", _room);
-            heroHolder.Place(0.55f, 0.13f, 470, 564, 0, 0, 0.5f, 0);
+            heroHolder.Place(0.55f, 0.22f, 470, 564, 0, 0, 0.5f, 0);
             _hero = Ui.Image(heroHolder, "hero_idle", Color.white, "Hero");
             HeroRt = _hero.Rt();
             HeroRt.Fill();
@@ -162,13 +162,13 @@ namespace Bunsin.Presentation
         void AddFurniture(int tier)
         {
             // 출세할수록 방이 채워진다(본체의 자리)
-            Add("o_box", 0.92f, 0.26f, 180, 150, tier == 0);
-            Add("o_bed", 0.82f, 0.26f, 330, 165, tier >= 0 && tier < 3);
-            Add("o_plant", 0.97f, 0.26f, 130, 200, tier >= 1);
-            Add("o_desk", 0.85f, 0.26f, 300, 205, tier >= 2);
+            Add("o_box", 0.92f, 0.34f, 180, 150, tier == 0);
+            Add("o_bed", 0.82f, 0.34f, 330, 165, tier >= 0 && tier < 3);
+            Add("o_plant", 0.97f, 0.34f, 130, 200, tier >= 1);
+            Add("o_desk", 0.85f, 0.34f, 300, 205, tier >= 2);
             Add("o_frame", 0.36f, 0.78f, 170, 145, tier >= 2);
-            Add("o_lamp", 0.03f, 0.26f, 110, 270, tier >= 3);
-            Add("o_sofa", 0.84f, 0.26f, 360, 190, tier >= 3);
+            Add("o_lamp", 0.03f, 0.34f, 110, 270, tier >= 3);
+            Add("o_sofa", 0.84f, 0.34f, 360, 190, tier >= 3);
             Add("o_tv", 0.35f, 0.58f, 230, 160, tier >= 4);
         }
 
