@@ -423,9 +423,15 @@ namespace Bunsin.Sim.Tests
             var sim = Rich();
             FillFirst(sim);
             sim.Tick(400);
+#if UNITY_5_3_OR_NEWER
+            // 실제 저장과 같은 직렬화기(JsonUtility)로 왕복한다
+            string json = UnityEngine.JsonUtility.ToJson(sim.S);
+            var back = UnityEngine.JsonUtility.FromJson<GameState>(json);
+#else
             var opt = new System.Text.Json.JsonSerializerOptions { IncludeFields = true };
             string json = System.Text.Json.JsonSerializer.Serialize(sim.S, opt);
             var back = System.Text.Json.JsonSerializer.Deserialize<GameState>(json, opt);
+#endif
             var sim2 = new GameSim(sim.Data, back);
             Assert.AreEqual(sim.IncomePerSec(), sim2.IncomePerSec(), 1e-6);
             Assert.AreEqual(sim.NetWorth(), sim2.NetWorth(), 1e-6);

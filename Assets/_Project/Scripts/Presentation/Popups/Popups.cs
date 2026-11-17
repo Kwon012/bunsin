@@ -167,6 +167,7 @@ namespace Bunsin.Presentation
             _current = f;
             try { build(f); }
             catch (Exception e) { Debug.LogException(e); }
+            if (f.Closed) return;
             Tweens.Fade(f.Group, 0, 1, 0.18f);
             Tweens.Appear(f.Panel, 0.28f);
         }

@@ -46,9 +46,9 @@ deposit_rate,0.02,예금 이자(월급날마다)
 deposit_cap_income_sec,3600,예금 한도 = 초당 수입 × 이 값
 stock_list_level,10,일터 시설이 이 단계면 상장
 stock_lot_cost_sec,400,주식 1주 가격 = 일터 기본 수입 × 이 값 × (1 + 0.1 × 시설 단계)
-stock_dividend_rate,0.03,배당 = 보유 평가액 × 이 값(월급날마다)
+stock_dividend_rate,0.05,배당 = 보유 평가액 × 이 값(월급날마다)
 stock_bonus_per_lot,0.01,1주당 그 일터 수입 +1%(자산 원천)
-property_rent_rate,0.04,월세 = 매입가 × 이 값(월급날마다)
+property_rent_rate,0.08,월세 = 매입가 × 이 값(월급날마다)
 property_remodel_max,3,리모델링 최대 단계
 property_remodel_cost_ratio,0.5,리모델링 비용 = 매입가 × 이 값
 property_remodel_rent_bonus,0.4,리모델링 1단계당 월세 +40%
