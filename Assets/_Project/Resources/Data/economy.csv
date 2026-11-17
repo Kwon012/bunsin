@@ -16,18 +16,18 @@ hire_growth,1.5,신입 고용가 증가율(현재 분신 수 기준)
 level_bonus,0.04,레벨 1당 수입 +4%(더하기)
 apt_bonus,0.25,적성 일치 수입 보너스
 apt_xp_bonus,0.25,적성 일치 경험 보너스
-apt_first_match_reward_sec,60,적성 맞는 자리 첫 배치 보상 = 초당 수입 × 이 값
-xp_base_sec,15,레벨 1→2에 필요한 근무 시간(초)
-xp_growth,1.08,레벨마다 필요 시간 증가율
+apt_first_match_reward_sec,20,적성 맞는 자리 첫 배치 보상 = 초당 수입 × 이 값
+xp_base_sec,20,레벨 1→2에 필요한 근무 시간(초)
+xp_growth,1.09,레벨마다 필요 시간 증가율
 level_per_slot,10,칸마다 승진 기준 레벨 = 칸 × 이 값
 bonus_xp_cap_levels,3,상한을 넘겨 저장되는 보너스 훈련의 최대량(레벨 수)
-train_cost_factor,2.5,훈련비 = 그 분신 초당 수입 × 남은 경험(초) × 이 값
-promo_cost_sec,240,승진비 = 윗자리 기본 수입 × 이 값
+train_cost_factor,0.6,훈련비 = 전체 초당 수입 × 남은 경험(초) × 이 값 (하한: 그 분신 수입 × 남은 경험 × 2)
+promo_cost_sec,600,승진비 = 윗자리 기본 수입 × 이 값
 cert_cost_mult,2,자격증 가격 = 승진비 × 이 값(도시마다 1회)
-facility_bonus,0.1,시설 1단계당 일터 수입 +10%(더하기)
-facility_cost_sec,150,시설 첫 단계 가격 = 일터 기본 수입 × 이 값
-facility_growth,1.15,시설 가격 증가율
-facility_max_level,30,시설 최고 단계
+facility_bonus,0.04,시설 1단계당 일터 수입 +4%(더하기). 최고 단계 × 자산 보너스가 칸 사이 배율보다 작아야 승진이 항상 이득
+facility_cost_sec,400,시설 첫 단계 가격 = 일터 기본 수입 × 이 값
+facility_growth,1.2,시설 가격 증가율
+facility_max_level,20,시설 최고 단계
 facility_stage_levels,5,시설 5단계마다 '등급' 1 상승
 cap_per_facility_stage,2,시설 등급 1당 그 일터 레벨 상한 +2
 offline_cap_sec,28800,오프라인 정산 상한(8시간)
